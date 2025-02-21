@@ -1,5 +1,6 @@
 package tn.esprit.spring.kaddem.services;
 
+import org.springframework.data.domain.Page;
 import tn.esprit.spring.kaddem.entities.Departement;
 import tn.esprit.spring.kaddem.entities.Universite;
 
@@ -24,4 +25,11 @@ public interface IUniversiteService {
  public void attribuerBudgetUniversite(Integer idUniv);
  public void assignUniversiteToDepartementToEtudiant(Integer idUniversite, Integer idDepartement, Integer idEtudiant) ;
 
- }
+ public List<Universite> getUniversitesByBudget(double budget) ;
+
+ public List<Universite> getUniversitesByAnnee(int annee);
+
+ public Page<Universite> getUniversitesPaged(int page, int size, String sortBy);
+ public List<Universite> getUniversitesByMinEtudiants(long minEtudiants);
+
+}

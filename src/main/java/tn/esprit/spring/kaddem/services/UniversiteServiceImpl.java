@@ -1,6 +1,10 @@
 package tn.esprit.spring.kaddem.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import tn.esprit.spring.kaddem.entities.Departement;
 import tn.esprit.spring.kaddem.entities.Etudiant;
@@ -78,6 +82,7 @@ public class UniversiteServiceImpl implements IUniversiteService {
         universite.setBudget(totalBudget);
         universiteRepository.save(universite);
     }
+
     @Override
     public void assignUniversiteToDepartementToEtudiant(Integer idUniversite, Integer idDepartement, Integer idEtudiant) {
         Universite universite = universiteRepository.findById(idUniversite)
@@ -87,16 +92,50 @@ public class UniversiteServiceImpl implements IUniversiteService {
         Etudiant etudiant = etudiantRepository.findById(idEtudiant)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
 
+        // Vérifier si l'étudiant appartient déjà à un département différent
+        if (etudiant.getDepartement() != null && !etudiant.getDepartement().equals(departement)) {
+            throw new RuntimeException("L'étudiant est déjà assigné à un autre département.");
+        }
+
+        // Ajouter le département à l'université s'il n'est pas déjà présent
         if (!universite.getDepartements().contains(departement)) {
             universite.getDepartements().add(departement);
         }
 
+        // Ajouter l'étudiant au département s'il n'est pas déjà dedans
         if (!departement.getEtudiants().contains(etudiant)) {
             departement.getEtudiants().add(etudiant);
+            etudiant.setDepartement(departement);
         }
 
         universiteRepository.save(universite);
         departementRepository.save(departement);
+        etudiantRepository.save(etudiant);
     }
+
+    @Override
+    public List<Universite> getUniversitesByBudget(double budget) {
+        return universiteRepository.findUniversitesByBudget(budget);
+    }
+
+    @Override
+    public List<Universite> getUniversitesByAnnee(int annee) {
+        return universiteRepository.findUniversitesByAnneeCreation(annee);
+    }
+
+    @Override
+    public Page<Universite> getUniversitesPaged(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return universiteRepository.findAll(pageable);
+
+    }
+
+    @Override
+    public List<Universite> getUniversitesByMinEtudiants(long minEtudiants) {
+        return universiteRepository.findUniversitesByMinEtudiants(minEtudiants);
+
+    }
+
+
 }
 

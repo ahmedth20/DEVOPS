@@ -2,6 +2,7 @@ package tn.esprit.spring.kaddem.controllers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.kaddem.entities.Departement;
@@ -70,6 +71,26 @@ public class UniversiteRestController {
 	public void assignUniversiteToDepartementToEtudiant(Integer idUniversite, Integer idDepartement, Integer idEtudiant) {
       universiteService.assignUniversiteToDepartementToEtudiant(idUniversite, idDepartement, idEtudiant);
 	}
+	@GetMapping("/budget/{budget}")
+	public List<Universite> getUniversitesByBudget(@PathVariable double budget) {
+		return universiteService.getUniversitesByBudget(budget);
+	}
+	@GetMapping("/annee/{annee}")
+	public List<Universite> getUniversitesByAnnee(@PathVariable int annee) {
+		return universiteService.getUniversitesByAnnee(annee);
+	}
+	@GetMapping("/paged")
+	public Page<Universite> getUniversitesPaged(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "id") String sortBy) {
+		return universiteService.getUniversitesPaged(page, size, sortBy);
+	}
+	@GetMapping("/minEtudiants/{minEtudiants}")
+	public List<Universite> getUniversitesByMinEtudiants(@PathVariable long minEtudiants) {
+		return universiteService.getUniversitesByMinEtudiants(minEtudiants);
+	}
+
 	}
 
 
