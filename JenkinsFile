@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'kaddem_db'
         DB_USER = 'root'
-        DB_PASS = 'yosr'
+        DB_PASS = 'yosr'  
         DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -42,6 +42,14 @@ pipeline {
                 script {
                     sh 'mvn clean package'
                     sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                     sh 'mvn deploy -DskipTests=true' 
                 }
             }
         }
