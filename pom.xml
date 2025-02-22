@@ -101,7 +101,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
