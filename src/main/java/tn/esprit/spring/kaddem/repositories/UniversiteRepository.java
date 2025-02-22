@@ -2,6 +2,7 @@ package tn.esprit.spring.kaddem.repositories;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,7 @@ import tn.esprit.spring.kaddem.entities.Universite;
 import java.util.List;
 
 @Repository
-public interface UniversiteRepository extends CrudRepository<Universite,Integer> {
+public interface UniversiteRepository extends JpaRepository<Universite,Integer> {
 
     @Query("SELECT u FROM Universite u WHERE u.budget >= :budget")
     List<Universite> findUniversitesByBudget(@Param("budget") double budget);

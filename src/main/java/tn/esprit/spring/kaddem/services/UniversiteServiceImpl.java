@@ -14,6 +14,7 @@ import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 import tn.esprit.spring.kaddem.repositories.UniversiteRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 @Service
@@ -41,13 +42,18 @@ public class UniversiteServiceImpl implements IUniversiteService {
         return (universiteRepository.save(u));
     }
 
+    @Override
     public Universite retrieveUniversite(Integer idUniversite) {
-        Universite u = universiteRepository.findById(idUniversite).get();
-        return u;
+        return universiteRepository.findById(idUniversite)
+                .orElseThrow(() -> new NoSuchElementException("Université avec l'ID " + idUniversite + " non trouvée"));
+
     }
 
+    @Override
     public void deleteUniversite(Integer idUniversite) {
-        universiteRepository.delete(retrieveUniversite(idUniversite));
+        Universite universite = retrieveUniversite(idUniversite); // Vérifie si l'université existe
+        universiteRepository.delete(universite);
+
     }
 
     public void assignUniversiteToDepartement(Integer idUniversite, Integer idDepartement) {
