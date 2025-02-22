@@ -1,34 +1,44 @@
 package tn.esprit.spring.kaddem.services;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import tn.esprit.spring.kaddem.entities.Departement;
+import tn.esprit.spring.kaddem.entities.Etudiant;
 import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 
 import javax.transaction.Transactional;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test")  // Utilise le profil de test
+@ActiveProfiles("test")
 @Transactional
 public class DepartementServiceTest {
 
     @Autowired
     DepartementRepository departementRepository;
 
+    @Autowired
+    DepartementServiceImpl departementService;
+
     private Departement savedDepartement;
 
     @BeforeEach
     public void setUp() {
-        // Créer un département avec des informations de base
         Departement departement = new Departement("Informatique");
         savedDepartement = departementRepository.save(departement);
-        departementRepository.flush();  // Assurez-vous que l'objet est bien sauvegardé
+        departementRepository.flush();
     }
 
     @Test
@@ -65,4 +75,16 @@ public class DepartementServiceTest {
         assertFalse(departementRepository.findById(savedDepartement.getIdDepart()).isPresent(),
                 "Le département n'a pas été supprimé !");
     }
-}
+
+    @Test
+    public void testDepartementStatus() {
+        savedDepartement.setEtudiants(new HashSet<>(Arrays.asList(new Etudiant())));
+        departementRepository.save(savedDepartement);
+        departementRepository.flush();
+
+        String status = savedDepartement.getEtudiants().size() < 5 ? "Département dépeuplé" : "Département normal";
+        assertEquals("Département dépeuplé", status);
+    }
+
+
+    }

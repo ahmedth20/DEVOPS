@@ -5,7 +5,6 @@ import tn.esprit.spring.kaddem.entities.Departement;
 import java.util.List;
 
 public interface IDepartementService {
-    public List<Departement> retrieveAllDepartements();
 
     public Departement addDepartement (Departement d);
 
