@@ -18,24 +18,29 @@ pipeline {
             }
         }
 
-        stage('Start MySQL') {
+       stage('Start MySQL') {
             steps {
                 script {
                     sh '''
+                    # Vérifier si le conteneur existe déjà et le supprimer
+                    docker ps -a -q --filter name=mysql-test | xargs -I {} docker rm -f {}
+        
+                    # Démarrer le nouveau conteneur
                     docker run --rm --name $MYSQL_CONTAINER \
                         -e MYSQL_DATABASE=$DB_NAME \
                         -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                         -p 3308:3306 \
                         -d mysql:8
-
+        
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
-
+        
                     docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
         }
+
 
         stage('Build & Test') {
             steps {
