@@ -13,6 +13,7 @@ import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 import tn.esprit.spring.kaddem.repositories.UniversiteRepository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -56,11 +57,20 @@ public class UniversiteServiceImpl implements IUniversiteService {
 
     }
 
+
     public void assignUniversiteToDepartement(Integer idUniversite, Integer idDepartement) {
         Universite u = universiteRepository.findById(idUniversite).orElse(null);
         Departement d = departementRepository.findById(idDepartement).orElse(null);
-        u.getDepartements().add(d);
-        universiteRepository.save(u);
+
+        if (u != null && d != null) {
+            if (u.getDepartements() == null) {
+                u.setDepartements(new HashSet<>()); // Évite NullPointerException
+            }
+            u.getDepartements().add(d);
+            universiteRepository.save(u);
+        } else {
+            throw new IllegalArgumentException("Université ou Département introuvable");
+        }
     }
 
     public Set<Departement> retrieveDepartementsByUniversite(Integer idUniversite) {
@@ -72,19 +82,25 @@ public class UniversiteServiceImpl implements IUniversiteService {
     public void attribuerBudgetUniversite(Integer idUniv) {
         Universite universite = universiteRepository.findById(idUniv)
                 .orElseThrow(() -> new RuntimeException("Université non trouvée"));
+
         Set<Departement> departements = universite.getDepartements();
         if (departements == null || departements.isEmpty()) {
             throw new RuntimeException("Aucun département trouvé pour cette université");
         }
-        double totalBudget = 0.0F;
+
+        double totalBudget = 0.0;
+
         for (Departement d : departements) {
-            Set<Etudiant> etudiants = d.getEtudiants();
-            int nombreEtudiants = (etudiants != null) ? etudiants.size() : 0;
+            if (d != null) {
+                Set<Etudiant> etudiants = d.getEtudiants();
+                int nombreEtudiants = (etudiants != null) ? etudiants.size() : 0;
 
-            int anciennete = (universite.getAnneeCreation() != null) ? (2024 - universite.getAnneeCreation()) : 0;
+                int anciennete = (universite.getAnneeCreation() != null) ? (2024 - universite.getAnneeCreation()) : 0;
 
-            totalBudget += (nombreEtudiants * 100) + (anciennete * 500);
+                totalBudget += (nombreEtudiants * 100) + (anciennete * 500);
+            }
         }
+
         universite.setBudget(totalBudget);
         universiteRepository.save(universite);
     }
@@ -98,9 +114,9 @@ public class UniversiteServiceImpl implements IUniversiteService {
         Etudiant etudiant = etudiantRepository.findById(idEtudiant)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
 
-        // Vérifier si l'étudiant appartient déjà à un département différent
-        if (etudiant.getDepartement() != null && !etudiant.getDepartement().equals(departement)) {
-            throw new RuntimeException("L'étudiant est déjà assigné à un autre département.");
+        // Vérifier et initialiser la liste des départements de l'université
+        if (universite.getDepartements() == null) {
+            universite.setDepartements(new HashSet<>());
         }
 
         // Ajouter le département à l'université s'il n'est pas déjà présent
@@ -108,12 +124,23 @@ public class UniversiteServiceImpl implements IUniversiteService {
             universite.getDepartements().add(departement);
         }
 
-        // Ajouter l'étudiant au département s'il n'est pas déjà dedans
+        // Vérifier si l'étudiant appartient déjà à un département différent
+        if (etudiant.getDepartement() != null && !etudiant.getDepartement().equals(departement)) {
+            throw new RuntimeException("L'étudiant est déjà assigné à un autre département.");
+        }
+
+        // Vérifier et initialiser la liste des étudiants dans le département
+        if (departement.getEtudiants() == null) {
+            departement.setEtudiants(new HashSet<>());
+        }
+
+        // Ajouter l'étudiant au département
         if (!departement.getEtudiants().contains(etudiant)) {
             departement.getEtudiants().add(etudiant);
             etudiant.setDepartement(departement);
         }
 
+        // Sauvegarder les modifications
         universiteRepository.save(universite);
         departementRepository.save(departement);
         etudiantRepository.save(etudiant);

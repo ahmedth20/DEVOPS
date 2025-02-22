@@ -15,7 +15,7 @@ public class Departement implements Serializable{
     private String nomDepart;
     @OneToMany(mappedBy="departement")
     @JsonIgnore
-    private Set<Etudiant> etudiants;
+    private Set<Etudiant> etudiants ;
     public Departement() {
         // TODO Auto-generated constructor stub
     }
