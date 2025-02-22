@@ -159,7 +159,8 @@ public class UniversiteServiceImplTest {
         assertFalse(universites.isEmpty());
     }
 
-    /*@Test
+  /*  @Test
+
     void testAssignUniversiteToDepartementToEtudiant() {
         // Create and initialize the department
         Departement departement = new Departement();

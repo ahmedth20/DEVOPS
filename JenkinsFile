@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'kaddem_db'
         DB_USER = 'root'
-        DB_PASS = ''
+        DB_PASS = ''  
         DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -17,31 +17,47 @@ pipeline {
                 }
             }
         }
+    
+ stage('Start MySQL') {
+    steps {
+        script {
+            sh '''
+            if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                echo "Le conteneur MySQL est déjà en cours d'exécution."
+            else
+                echo "Démarrage de MySQL..."
+                docker run --rm --name $MYSQL_CONTAINER \
+                    -e MYSQL_DATABASE=$DB_NAME \
+                    -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                    -p 3308:3306 \
+                    -d mysql:8
+            fi
 
-        stage('Start MySQL') {
-            steps {
-                script {
-                    sh '''
-                    docker run --rm --name $MYSQL_CONTAINER \
-                        -e MYSQL_DATABASE=$DB_NAME \
-                        -e MYSQL_ROOT_PASSWORD=$DB_PASS \
-                        -p 3308:3306 \
-                        -d mysql:8
+            echo "Attente de MySQL (10 sec)..."
+            sleep 10
 
-                    echo "Attente de MySQL (10 sec)..."
-                    sleep 10
-
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
-                    '''
-                }
-            }
+            docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+            '''
         }
+    }
+}
+
+
+
 
         stage('Build & Test') {
             steps {
                 script {
                     sh 'mvn clean package'
                     sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                     sh 'mvn deploy -DskipTests=true' 
                 }
             }
         }
