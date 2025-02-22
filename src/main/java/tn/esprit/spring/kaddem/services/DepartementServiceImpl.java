@@ -37,6 +37,23 @@ public class DepartementServiceImpl implements IDepartementService{
 		departementRepository.delete(d);
 	}
 
+	public String getDepartementStatus(Integer idDepartement) {
+		Departement departement = departementRepository.findById(idDepartement).orElse(null);
+
+		if (departement == null) {
+			return "Département introuvable";
+		}
+
+		int nombreEtudiants = departement.getEtudiants().size();
+
+		if (nombreEtudiants < 5) {
+			return "Département dépeuplé";
+		} else {
+			return "Département normal";
+		}
+	}
+
+
 
 
 }
