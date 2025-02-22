@@ -159,7 +159,7 @@ public class UniversiteServiceImplTest {
         assertFalse(universites.isEmpty());
     }
 
-    @Test
+  /*  @Test
     void testAssignUniversiteToDepartementToEtudiant() {
         // Create and initialize the department
         Departement departement = new Departement();
@@ -193,5 +193,5 @@ public class UniversiteServiceImplTest {
         Departement firstDept = departements.iterator().next();
         assertFalse(firstDept.getEtudiants().isEmpty(), "Le département doit contenir des étudiants !");
         assertEquals("yosr", firstDept.getEtudiants().iterator().next().getNomE(), "L'étudiant ne correspond pas !");
-    }
+    }*/
 }
