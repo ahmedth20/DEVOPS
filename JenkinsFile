@@ -22,10 +22,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    # Vérifier si le conteneur existe déjà et le supprimer
-                    docker ps -a -q --filter name=mysql-test | xargs -I {} docker rm -f {}
-        
-                    # Démarrer le nouveau conteneur
                     docker run --rm --name $MYSQL_CONTAINER \
                         -e MYSQL_DATABASE=$DB_NAME \
                         -e MYSQL_ROOT_PASSWORD=$DB_PASS \
