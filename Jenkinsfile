@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools {
-        maven 'M2_Home' // Doit correspondre au nom défini dans Jenkins
+        maven 'Maven' // Doit correspondre au nom défini dans Jenkins
     }
     
     stages {
