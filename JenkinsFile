@@ -7,8 +7,6 @@ pipeline {
         DB_PASS = ''
         DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
-        registryCredentials = "nexus" 
-        registry = "192.168.33.10:8083"
     }
 
     stages {
@@ -57,18 +55,6 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
-                }
-            }
-        }
-
-        // Ajout du stage pour déployer sur Nexus
-        stage('Deploy to Nexus') {
-            steps {
-                script {
-                    docker.withRegistry("http://${registry}", registryCredentials) {
-                        sh 'docker build -t $registry/nodemongoapp:5.0 .' 
-                        sh 'docker push $registry/nodemongoapp:5.0'     
-                    }
                 }
             }
         }
