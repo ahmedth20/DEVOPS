@@ -6,7 +6,7 @@ pipeline {
         DB_USER = 'root'
         DB_PASS = ''
         DB_PORT = '3306'
-        MYSQL_CONTAINER = 'mysql-kadem'
+        MYSQL_CONTAINER = 'mysql-test'
     }
 
     stages {
