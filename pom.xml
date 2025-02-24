@@ -65,6 +65,22 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- JaCoCo Maven Plugin for code coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal> <!-- Initializes JaCoCo agent -->
+                            <goal>report</goal> <!-- Generates the report -->
+                        </goals>
+                        <phase>test</phase> <!-- Executes after tests -->
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
