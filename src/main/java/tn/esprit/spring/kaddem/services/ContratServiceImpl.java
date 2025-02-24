@@ -9,9 +9,8 @@ import tn.esprit.spring.kaddem.entities.Etudiant;
 import tn.esprit.spring.kaddem.entities.Specialite;
 import tn.esprit.spring.kaddem.repositories.ContratRepository;
 import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 
 @Slf4j
 @Service
@@ -44,40 +43,61 @@ ContratRepository contratRepository;
 
 
 	public Contrat affectContratToEtudiant (Integer idContrat, String nomE, String prenomE){
-		Etudiant e=etudiantRepository.findByNomEAndPrenomE(nomE, prenomE);
-		Contrat ce=contratRepository.findByIdContrat(idContrat);
-		Set<Contrat> contrats= e.getContrats();
-		Integer nbContratssActifs=0;
-		if (contrats.size()!=0) {
-			for (Contrat contrat : contrats) {
-				if (((contrat.getArchive())!=null)&& ((contrat.getArchive())!=false))  {
-					nbContratssActifs++;
-				}
+		Etudiant e = etudiantRepository.findByNomEAndPrenomE(nomE, prenomE);
+		if (e == null) {
+			log.error("Étudiant non trouvé : {} {}", nomE, prenomE);
+			return null;
+		}
+
+		Contrat ce = contratRepository.findByIdContrat(idContrat);
+		if (ce == null) {
+			log.error("Contrat non trouvé : {}", idContrat);
+			return null;
+		}
+
+		Set<Contrat> contrats = e.getContrats();
+		if (contrats == null) {
+			log.warn("L'étudiant {} {} n'a pas encore de contrats", nomE, prenomE);
+			contrats = new HashSet<>(); // Initialisation pour éviter NullPointerException
+		}
+
+		Integer nbContratsActifs = 0;
+		for (Contrat contrat : contrats) {
+			if (contrat.getArchive() != null && !contrat.getArchive()) {
+				nbContratsActifs++;
 			}
 		}
-		if (nbContratssActifs<=4){
-		ce.setEtudiant(e);
-		contratRepository.save(ce);}
+
+		if (nbContratsActifs <= 4) {
+			ce.setEtudiant(e);
+			contratRepository.save(ce);
+		} else {
+			log.warn("L'étudiant {} {} a déjà 5 contrats actifs", nomE, prenomE);
+		}
+
 		return ce;
 	}
+
 	public 	Integer nbContratsValides(Date startDate, Date endDate){
 		return contratRepository.getnbContratsValides(startDate, endDate);
 	}
 
-	public void retrieveAndUpdateStatusContrat(){
-		List<Contrat>contrats=contratRepository.findAll();
-		List<Contrat>contrats15j=null;
-		List<Contrat>contratsAarchiver=null;
+	public void retrieveAndUpdateStatusContrat() {
+		List<Contrat> contrats = contratRepository.findAll();
+		List<Contrat> contrats15j = new ArrayList<>(); // Initialisation de la liste
+		List<Contrat> contratsAarchiver = new ArrayList<>(); // Initialisation de la liste
+
 		for (Contrat contrat : contrats) {
 			Date dateSysteme = new Date();
-			if (contrat.getArchive()==false) {
+			if (contrat.getArchive() == false) {
 				long difference_In_Time = dateSysteme.getTime() - contrat.getDateFinContrat().getTime();
 				long difference_In_Days = (difference_In_Time / (1000 * 60 * 60 * 24)) % 365;
-				if (difference_In_Days==15){
+
+				if (difference_In_Days == 15) {
 					contrats15j.add(contrat);
-					log.info(" Contrat : " + contrat);
+					log.info("Contrat : " + contrat);
 				}
-				if (difference_In_Days==0) {
+				if (difference_In_Days == 0) {
 					contratsAarchiver.add(contrat);
 					contrat.setArchive(true);
 					contratRepository.save(contrat);
@@ -85,6 +105,7 @@ ContratRepository contratRepository;
 			}
 		}
 	}
+
 	public float getChiffreAffaireEntreDeuxDates(Date startDate, Date endDate){
 		float difference_In_Time = endDate.getTime() - startDate.getTime();
 		float difference_In_Days = (difference_In_Time / (1000 * 60 * 60 * 24)) % 365;
