@@ -88,12 +88,14 @@ class EquipeServiceImplTest {
             Contrat contrat = new Contrat();
             contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusYears(2)));
             contrat.setArchive(false);
-            etudiant.setContrats(Set.of(contrat));
+            etudiant.setContrats(new HashSet<>(List.of(contrat))); 
             etudiants.add(etudiant);
         }
         equipe.setEtudiants(etudiants);
+
         when(equipeRepository.findAll()).thenReturn(List.of(equipe));
         equipeService.evoluerEquipes();
+
         verify(equipeRepository).save(equipe);
     }
 
@@ -104,7 +106,7 @@ class EquipeServiceImplTest {
         contrat.setArchive(false);
 
         Etudiant etudiant = new Etudiant();
-        etudiant.setContrats(Set.of(contrat));
+        etudiant.setContrats(new HashSet<>(List.of(contrat)));
 
         Set<Etudiant> etudiantsSet = new HashSet<>();
         etudiantsSet.add(etudiant);
@@ -130,7 +132,7 @@ class EquipeServiceImplTest {
         contrat.setArchive(false);
 
         Etudiant etudiant = new Etudiant();
-        etudiant.setContrats(Set.of(contrat));
+        etudiant.setContrats(new HashSet<>(List.of(contrat)));
         equipe.setEtudiants(new HashSet<>(List.of(etudiant)));
 
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
@@ -145,7 +147,7 @@ class EquipeServiceImplTest {
         contrat.setArchive(false);
 
         Etudiant etudiant = new Etudiant();
-        etudiant.setContrats(Set.of(contrat));
+        etudiant.setContrats(new HashSet<>(List.of(contrat)));
         equipe.setEtudiants(new HashSet<>(List.of(etudiant)));
 
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));

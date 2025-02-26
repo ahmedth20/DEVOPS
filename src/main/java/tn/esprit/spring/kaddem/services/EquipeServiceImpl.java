@@ -21,7 +21,7 @@ import java.util.Set;
 @Service
 public class EquipeServiceImpl implements IEquipeService {
 	private final EquipeRepository equipeRepository;
-	
+
 
 	public List<Equipe> retrieveAllEquipes() {
 		return (List<Equipe>) equipeRepository.findAll();
