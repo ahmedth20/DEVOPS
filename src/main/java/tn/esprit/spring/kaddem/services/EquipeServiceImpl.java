@@ -12,9 +12,9 @@ import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @AllArgsConstructor
@@ -49,23 +49,28 @@ public class EquipeServiceImpl implements IEquipeService {
 	}
 
 	public void evoluerEquipes() {
-		List<Equipe> equipes = (List<Equipe>) equipeRepository.findAll();
+		// Récupérer toutes les équipes depuis le repository
+		List<Equipe> equipes = StreamSupport.stream(equipeRepository.findAll().spliterator(), false)
+				.collect(Collectors.toList());
 
 		for (Equipe equipe : equipes) {
 			if (equipe.getNiveau().equals(Niveau.JUNIOR) || equipe.getNiveau().equals(Niveau.SENIOR)) {
-				List<Etudiant> etudiants = (List<Etudiant>) equipe.getEtudiants();
+				Set<Etudiant> etudiants = equipe.getEtudiants();
 				int nbEtudiantsAvecContratsActifs = 0;
 
 				for (Etudiant etudiant : etudiants) {
 					Set<Contrat> contrats = etudiant.getContrats();
 					for (Contrat contrat : contrats) {
-						if (contrat.getArchive() == false && isContratActif(contrat)) {
+						// Vérifier si le contrat est actif et non archivé
+						if (!contrat.getArchive() && isContratActif(contrat)) {
 							nbEtudiantsAvecContratsActifs++;
 							break; // Pas besoin de vérifier plus de contrats pour cet étudiant
 						}
 					}
+
+					// Si on a trouvé 3 étudiants avec des contrats actifs, on arrête
 					if (nbEtudiantsAvecContratsActifs >= 3) {
-						break; // Si on a trouvé assez d'étudiants avec des contrats actifs
+						break;
 					}
 				}
 
@@ -73,26 +78,30 @@ public class EquipeServiceImpl implements IEquipeService {
 				if (nbEtudiantsAvecContratsActifs >= 3) {
 					if (equipe.getNiveau().equals(Niveau.JUNIOR)) {
 						equipe.setNiveau(Niveau.SENIOR);
-						equipeRepository.save(equipe);
+						equipeRepository.save(equipe); // Sauvegarder l'équipe après l'évolution
 						log.info("Equipe {} promoted to SENIOR", equipe.getNomEquipe());
-						break; // On passe à la prochaine équipe après évolution
 					}
 					if (equipe.getNiveau().equals(Niveau.SENIOR)) {
 						equipe.setNiveau(Niveau.EXPERT);
 						equipeRepository.save(equipe);
 						log.info("Equipe {} promoted to EXPERT", equipe.getNomEquipe());
-						break;
 					}
 				}
 			}
 		}
 	}
 
+
+
+
 	// Méthode utilitaire pour vérifier si un contrat est actif depuis plus d'un an
+	// Method to check if a contract is active
 	private boolean isContratActif(Contrat contrat) {
-		LocalDate dateFinContrat = contrat.getDateFinContrat().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+		java.util.Date dateFinContrat = contrat.getDateFinContrat();
+		LocalDate localDateFinContrat = new java.sql.Date(dateFinContrat.getTime()).toLocalDate();
+
 		LocalDate currentDate = LocalDate.now();
-		return dateFinContrat.isBefore(currentDate.minusYears(1));
+		return localDateFinContrat.isAfter(currentDate.minusYears(1));
 	}
 
 	// Récupérer toutes les équipes ayant au moins un étudiant avec un contrat actif
@@ -141,10 +150,14 @@ public boolean hasExpiredContracts(Integer equipeId) {
 		return equipe.getEtudiants().stream()
 				.flatMap(etudiant -> etudiant.getContrats().stream())
 				.anyMatch(contrat -> {
-					LocalDate dateFinContrat = contrat.getDateFinContrat()
-							.toInstant()
-							.atZone(ZoneId.systemDefault())
-							.toLocalDate();
+					Date dateFin = contrat.getDateFinContrat();
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(dateFin);
+					LocalDate dateFinContrat = LocalDate.of(
+							cal.get(Calendar.YEAR),
+							cal.get(Calendar.MONTH) + 1, // Calendar.MONTH est basé sur 0 (Janvier = 0)
+							cal.get(Calendar.DAY_OF_MONTH)
+					);
 					return dateFinContrat.isBefore(LocalDate.now()) && !contrat.getArchive();
 				});
 	}
