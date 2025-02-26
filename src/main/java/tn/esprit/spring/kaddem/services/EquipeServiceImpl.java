@@ -8,8 +8,11 @@ import tn.esprit.spring.kaddem.entities.Equipe;
 import tn.esprit.spring.kaddem.entities.Etudiant;
 import tn.esprit.spring.kaddem.entities.Niveau;
 import tn.esprit.spring.kaddem.repositories.EquipeRepository;
+import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +21,7 @@ import java.util.Set;
 @Service
 public class EquipeServiceImpl implements IEquipeService {
 	private final EquipeRepository equipeRepository;
+	
 
 	public List<Equipe> retrieveAllEquipes() {
 		return (List<Equipe>) equipeRepository.findAll();
@@ -90,4 +94,92 @@ public class EquipeServiceImpl implements IEquipeService {
 		LocalDate currentDate = LocalDate.now();
 		return dateFinContrat.isBefore(currentDate.minusYears(1));
 	}
+
+	// Récupérer toutes les équipes ayant au moins un étudiant avec un contrat actif
+	public List<Equipe> retrieveEquipesWithActiveContrats() {
+		List<Equipe> equipes = (List<Equipe>) equipeRepository.findAll();
+		List<Equipe> equipesAvecContratsActifs = new ArrayList<>();
+		for (Equipe equipe : equipes) {
+			for (Etudiant etudiant : equipe.getEtudiants()) {
+				for (Contrat contrat : etudiant.getContrats()) {
+					if (!contrat.getArchive() && isContratActif(contrat)) {
+						equipesAvecContratsActifs.add(equipe);
+						break;
+					}
+				}
+			}
+		}
+		return equipesAvecContratsActifs;
+	}
+//Récupérer toutes les équipes qui ont un nombre d'étudiants supérieur ou égal à un seuil donné.
+	public List<Equipe> retrieveEquipesByMinStudents(int minStudents) {
+		List<Equipe> equipes = (List<Equipe>) equipeRepository.findAll();
+		List<Equipe> equipesFiltrées = new ArrayList<>();
+		for (Equipe equipe : equipes) {
+			if (equipe.getEtudiants().size() >= minStudents) {
+				equipesFiltrées.add(equipe);
+			}
+		}
+		return equipesFiltrées;
+	}
+
+//Compter le nombre de contrats actifs dans une équipe.
+	public long countActiveContractsInEquipe(Integer equipeId) {
+		Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
+		if (equipe != null) {
+			return equipe.getEtudiants().stream()
+					.flatMap(etudiant -> etudiant.getContrats().stream())
+					.filter(contrat -> !contrat.getArchive() && isContratActif(contrat))
+					.count();
+		}
+		return 0;
+	}
+//Vérifier si l'une des équipes a un contrat expiré.
+public boolean hasExpiredContracts(Integer equipeId) {
+	Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
+	if (equipe != null) {
+		return equipe.getEtudiants().stream()
+				.flatMap(etudiant -> etudiant.getContrats().stream())
+				.anyMatch(contrat -> {
+					LocalDate dateFinContrat = contrat.getDateFinContrat()
+							.toInstant()
+							.atZone(ZoneId.systemDefault())
+							.toLocalDate();
+					return dateFinContrat.isBefore(LocalDate.now()) && !contrat.getArchive();
+				});
+	}
+	return false;
+}
+//Récupérer les équipes qui n'ont pas encore d'étudiants assignés.
+	public List<Equipe> retrieveEquipesWithoutStudents() {
+		List<Equipe> equipes = (List<Equipe>) equipeRepository.findAll();
+		List<Equipe> equipesSansEtudiants = new ArrayList<>();
+		for (Equipe equipe : equipes) {
+			if (equipe.getEtudiants().isEmpty()) {
+				equipesSansEtudiants.add(equipe);
+			}
+		}
+		return equipesSansEtudiants;
+	}
+
+	//Récupérer les équipes dont le niveau est supérieur à un certain seuil.
+	public List<Equipe> retrieveEquipesByMinLevel(Niveau minLevel) {
+		List<Equipe> equipes = (List<Equipe>) equipeRepository.findAll();
+		List<Equipe> equipesFiltres = new ArrayList<>();
+		for (Equipe equipe : equipes) {
+			if (equipe.getNiveau().compareTo(minLevel) > 0) {
+				equipesFiltres.add(equipe);
+			}
+		}
+		return equipesFiltres;
+	}
+
+
+
+
+
+
+
+
+
 }

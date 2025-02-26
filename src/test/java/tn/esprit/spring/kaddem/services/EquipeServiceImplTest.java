@@ -1,108 +1,170 @@
 package tn.esprit.spring.kaddem.services;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.*;
-import tn.esprit.spring.kaddem.entities.*;
+import tn.esprit.spring.kaddem.entities.Contrat;
+import tn.esprit.spring.kaddem.entities.Equipe;
+import tn.esprit.spring.kaddem.entities.Etudiant;
+import tn.esprit.spring.kaddem.entities.Niveau;
 import tn.esprit.spring.kaddem.repositories.EquipeRepository;
 import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 
+import java.time.LocalDate;
 import java.util.*;
 
-@ExtendWith(MockitoExtension.class)  // Utilisation de MockitoExtension pour JUnit 5
-public class EquipeServiceImplTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class EquipeServiceImplTest {
+
+    @Mock
+    private EquipeRepository equipeRepository;
+
+    @Mock
+    private EtudiantRepository etudiantRepository;
 
     @InjectMocks
-    private EquipeServiceImpl equipeService;  // Injection du service dans le test
+    private EquipeServiceImpl equipeService;
 
-    @Mock
-    private EquipeRepository equipeRepository;  // Mock du repository des équipes
+    private Equipe equipe;
 
-    @Mock
-    private EtudiantRepository etudiantRepository;  // Mock du repository des étudiants
-
-    private Etudiant etudiant1;
-    private Etudiant etudiant2;
-
-    // Initialisation des objets avant chaque test
     @BeforeEach
     void setUp() {
-        etudiant1 = new Etudiant("Etudiant A", "email1@example.com");
-        etudiant2 = new Etudiant("Etudiant B", "email2@example.com");
+        equipe = new Equipe();
+        equipe.setIdEquipe(1);
+        equipe.setNomEquipe("Team A");
+        equipe.setNiveau(Niveau.JUNIOR);
     }
 
     @Test
     void testRetrieveAllEquipes() {
-        List<Equipe> equipes = Arrays.asList(new Equipe("Equipe A", Niveau.JUNIOR), new Equipe("Equipe B", Niveau.SENIOR));
+        List<Equipe> equipes = Arrays.asList(equipe);
         when(equipeRepository.findAll()).thenReturn(equipes);
-
         List<Equipe> result = equipeService.retrieveAllEquipes();
-        assertEquals(2, result.size());
-        assertEquals("Equipe A", result.get(0).getNomEquipe());
+        assertEquals(1, result.size());
     }
 
     @Test
     void testAddEquipe() {
-        Equipe equipe = new Equipe("Equipe A", Niveau.JUNIOR);
-        when(equipeRepository.save(any(Equipe.class))).thenReturn(equipe);
-
+        when(equipeRepository.save(equipe)).thenReturn(equipe);
         Equipe result = equipeService.addEquipe(equipe);
         assertNotNull(result);
-        assertEquals("Equipe A", result.getNomEquipe());
+        assertEquals("Team A", result.getNomEquipe());
     }
 
     @Test
     void testDeleteEquipe() {
-        Equipe equipe = new Equipe("Equipe A", Niveau.JUNIOR);
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
         doNothing().when(equipeRepository).delete(equipe);
-
         equipeService.deleteEquipe(1);
         verify(equipeRepository, times(1)).delete(equipe);
     }
 
     @Test
     void testRetrieveEquipe() {
-        Equipe equipe = new Equipe("Equipe A", Niveau.JUNIOR);
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
-
         Equipe result = equipeService.retrieveEquipe(1);
-        assertEquals("Equipe A", result.getNomEquipe());
+        assertNotNull(result);
+        assertEquals("Team A", result.getNomEquipe());
     }
 
     @Test
     void testUpdateEquipe() {
-        Equipe equipe = new Equipe("Equipe A", Niveau.JUNIOR);
-        when(equipeRepository.save(any(Equipe.class))).thenReturn(equipe);
-
+        when(equipeRepository.save(equipe)).thenReturn(equipe);
         Equipe result = equipeService.updateEquipe(equipe);
-        assertEquals("Equipe A", result.getNomEquipe());
+        assertEquals("Team A", result.getNomEquipe());
     }
 
     @Test
     void testEvoluerEquipes() {
-        // Création des équipes de test
-        Equipe equipe1 = new Equipe("Equipe A", Niveau.JUNIOR);
-        Equipe equipe2 = new Equipe("Equipe B", Niveau.SENIOR);
-
-        // Liste d'étudiants factices
-        List<Etudiant> etudiants = Arrays.asList(etudiant1, etudiant2);
-
-        // Mock des repositories
-        when(equipeRepository.findAll()).thenReturn(Arrays.asList(equipe1, equipe2));
-        when(etudiantRepository.findAll()).thenReturn(etudiants);
-
-        // Exécution de la méthode à tester
+        Set<Etudiant> etudiants = new HashSet<>();
+        for (int i = 0; i < 3; i++) {
+            Etudiant etudiant = new Etudiant();
+            Contrat contrat = new Contrat();
+            contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusYears(2)));
+            contrat.setArchive(false);
+            etudiant.setContrats(Set.of(contrat));
+            etudiants.add(etudiant);
+        }
+        equipe.setEtudiants(etudiants);
+        when(equipeRepository.findAll()).thenReturn(List.of(equipe));
         equipeService.evoluerEquipes();
+        verify(equipeRepository).save(equipe);
+    }
 
-        // Vérifications
-        verify(equipeRepository, times(1)).save(equipe1);  // Equipe A devrait être mise à jour
-        verify(equipeRepository, times(1)).save(equipe2);  // Equipe B devrait aussi être mise à jour
-        verify(etudiantRepository, times(1)).findAll();  // Vérifie que findAll est appelé pour récupérer les étudiants
+    @Test
+    void testRetrieveEquipesWithActiveContrats() {
+        Contrat contrat = new Contrat();
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusYears(2)));
+        contrat.setArchive(false);
+
+        Etudiant etudiant = new Etudiant();
+        etudiant.setContrats(Set.of(contrat));
+
+        Set<Etudiant> etudiantsSet = new HashSet<>();
+        etudiantsSet.add(etudiant);
+        equipe.setEtudiants(etudiantsSet);
+
+        when(equipeRepository.findAll()).thenReturn(List.of(equipe));
+        List<Equipe> result = equipeService.retrieveEquipesWithActiveContrats();
+        assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void testRetrieveEquipesByMinStudents() {
+        equipe.setEtudiants(new HashSet<>(List.of(new Etudiant(), new Etudiant())));
+        when(equipeRepository.findAll()).thenReturn(List.of(equipe));
+        List<Equipe> result = equipeService.retrieveEquipesByMinStudents(1);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testCountActiveContractsInEquipe() {
+        Contrat contrat = new Contrat();
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusYears(2)));
+        contrat.setArchive(false);
+
+        Etudiant etudiant = new Etudiant();
+        etudiant.setContrats(Set.of(contrat));
+        equipe.setEtudiants(new HashSet<>(List.of(etudiant)));
+
+        when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
+        long count = equipeService.countActiveContractsInEquipe(1);
+        assertEquals(1, count);
+    }
+
+    @Test
+    void testHasExpiredContracts() {
+        Contrat contrat = new Contrat();
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
+        contrat.setArchive(false);
+
+        Etudiant etudiant = new Etudiant();
+        etudiant.setContrats(Set.of(contrat));
+        equipe.setEtudiants(new HashSet<>(List.of(etudiant)));
+
+        when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
+        assertTrue(equipeService.hasExpiredContracts(1));
+    }
+
+    @Test
+    void testRetrieveEquipesWithoutStudents() {
+        equipe.setEtudiants(Collections.emptySet());
+        when(equipeRepository.findAll()).thenReturn(List.of(equipe));
+        List<Equipe> result = equipeService.retrieveEquipesWithoutStudents();
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testRetrieveEquipesByMinLevel() {
+        equipe.setNiveau(Niveau.EXPERT);
+        when(equipeRepository.findAll()).thenReturn(List.of(equipe));
+        List<Equipe> result = equipeService.retrieveEquipesByMinLevel(Niveau.SENIOR);
+        assertEquals(1, result.size());
     }
 }

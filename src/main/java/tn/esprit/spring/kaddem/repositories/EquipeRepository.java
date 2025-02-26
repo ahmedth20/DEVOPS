@@ -8,5 +8,4 @@ import tn.esprit.spring.kaddem.entities.Equipe;
 public interface EquipeRepository extends CrudRepository<Equipe,Integer> {
 
 
-
 }
