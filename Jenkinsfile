@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'Kaddemdb'  // Correspond à spring.datasource.url
         DB_USER = 'root'  
-        DB_PASS = ''  // Pas de mot de passe défini dans application-test.properties
+        DB_PASS = 'ahmedequipe'  // Pas de mot de passe défini dans application-test.properties
         DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
         MYSQL_CONTAINER = 'mysql-test'
     }
