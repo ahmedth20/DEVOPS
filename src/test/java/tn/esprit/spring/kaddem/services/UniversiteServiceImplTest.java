@@ -159,40 +159,5 @@ public class UniversiteServiceImplTest {
         assertFalse(universites.isEmpty());
     }
 
-  /*  @Test
 
-    void testAssignUniversiteToDepartementToEtudiant() {
-        // Create and initialize the department
-        Departement departement = new Departement();
-        departement.setNomDepart("Arctic");
-        departement.setEtudiants(new HashSet<>());
-
-        // Create and initialize the student
-        Etudiant etudiant = new Etudiant();
-        etudiant.setNomE("yosr");
-        etudiant.setDepartement(departement); // Set the department for the student
-
-        // Add student to the department
-        departement.getEtudiants().add(etudiant);
-
-        // Save the department first
-        Departement savedDepartement = departementRepository.save(departement);
-
-        // Add department to the university
-        savedUniversite.getDepartements().add(savedDepartement);
-
-        // Save the university
-        Universite updatedUniversite = universiteRepository.save(savedUniversite);
-
-        // Verify
-        Optional<Universite> foundUniversite = universiteRepository.findById(updatedUniversite.getIdUniv());
-        assertTrue(foundUniversite.isPresent(), "L'université n'a pas été trouvée !");
-        Universite universite = foundUniversite.get();
-        Set<Departement> departements = universite.getDepartements();
-
-        assertFalse(departements.isEmpty(), "L'université doit avoir des départements !");
-        Departement firstDept = departements.iterator().next();
-        assertFalse(firstDept.getEtudiants().isEmpty(), "Le département doit contenir des étudiants !");
-        assertEquals("yosr", firstDept.getEtudiants().iterator().next().getNomE(), "L'étudiant ne correspond pas !");
-    }*/
 }
