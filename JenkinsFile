@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'kaddem_db'
+        DB_NAME = 'Kaddemdb'  // Correspond à spring.datasource.url
         DB_USER = 'root'
-        DB_PASS = ''
-        DB_PORT = '3306'
+        DB_PASS = 'ahmedequipe'  // Pas de mot de passe défini dans application-test.properties
+        DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
         MYSQL_CONTAINER = 'mysql-test'
     }
 
@@ -22,16 +22,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    if [ "$(docker ps -aq -f name=$MYSQL_CONTAINER)" ]; then
-                        if [ "$(docker ps -q -f name=$MYSQL_CONTAINER)" ]; then
+                    # Ensure the Docker client is used from WSL
+                    WSL_DOCKER="docker"
+
+                    if [ $(wsl $WSL_DOCKER ps -a -q -f name=$MYSQL_CONTAINER) ]; then
+                        if [ $(wsl $WSL_DOCKER ps -q -f name=$MYSQL_CONTAINER) ]; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
-                            echo "Démarrage du conteneur MySQL..."
-                            docker start $MYSQL_CONTAINER
+                            echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
+                            wsl $WSL_DOCKER start $MYSQL_CONTAINER
                         fi
                     else
-                        echo "Création et démarrage d'un nouveau conteneur MySQL..."
-                        docker run --name $MYSQL_CONTAINER \
+                        echo "Démarrage de MySQL..."
+                        wsl $WSL_DOCKER run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
@@ -41,17 +44,16 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    wsl $WSL_DOCKER ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean package'
-                    sh 'mvn test'
+                    sh 'mvn clean compile'
                 }
             }
         }
@@ -64,13 +66,10 @@ pipeline {
             }
         }
 
-        stage('Cleanup') {
+        stage('Test') {
             steps {
                 script {
-                    sh '''
-                    docker stop $MYSQL_CONTAINER || true
-                    docker rm -f $MYSQL_CONTAINER || true
-                    '''
+                    sh 'mvn test'
                 }
             }
         }
