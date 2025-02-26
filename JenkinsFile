@@ -58,13 +58,6 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                script {
-                    sh 'mvn deploy -DskipTests=true'
-                }
-            }
-        }
 
         stage('Cleanup') {
             steps {
