@@ -84,7 +84,7 @@ public class EquipeServiceImplTest {
         assertEquals("Equipe A", result.getNomEquipe());
     }
 
-   /* @Test
+    @Test
     void testEvoluerEquipes() {
         // Création des équipes de test
         Equipe equipe1 = new Equipe("Equipe A", Niveau.JUNIOR);
@@ -104,5 +104,5 @@ public class EquipeServiceImplTest {
         verify(equipeRepository, times(1)).save(equipe1);  // Equipe A devrait être mise à jour
         verify(equipeRepository, times(1)).save(equipe2);  // Equipe B devrait aussi être mise à jour
         verify(etudiantRepository, times(1)).findAll();  // Vérifie que findAll est appelé pour récupérer les étudiants
-    }*/
+    }
 }
