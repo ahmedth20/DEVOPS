@@ -22,16 +22,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    if [ $(docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
-                        if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                    # Ensure the Docker client is used from WSL
+                    WSL_DOCKER="docker"
+
+                    if [ $(wsl $WSL_DOCKER ps -a -q -f name=$MYSQL_CONTAINER) ]; then
+                        if [ $(wsl $WSL_DOCKER ps -q -f name=$MYSQL_CONTAINER) ]; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
                             echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                            docker start $MYSQL_CONTAINER
+                            wsl $WSL_DOCKER start $MYSQL_CONTAINER
                         fi
                     else
                         echo "Démarrage de MySQL..."
-                        docker run --name $MYSQL_CONTAINER \
+                        wsl $WSL_DOCKER run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
@@ -41,7 +44,7 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    wsl $WSL_DOCKER ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
