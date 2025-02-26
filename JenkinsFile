@@ -1,37 +1,70 @@
 pipeline {
     agent any
 
+    environment {
+        DB_NAME = 'kaddem_db'
+        DB_USER = 'root'
+        DB_PASS = 'yosr'  
+        DB_PORT = '3308'
+        MYSQL_CONTAINER = 'mysql-test'
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                // Clean and compile the project
-                sh 'mvn clean compile'
+                script {
+                    git branch: 'universite', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                }
             }
         }
-
-        stage('Unit Tests') {
+    
+        stage('Start MySQL') {
             steps {
-                // Run unit tests
-                sh 'mvn test'
-            }
-        }
+                script {
+                    sh '''
+                    if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                        echo "Le conteneur MySQL est déjà en cours d'exécution."
+                    else
+                        echo "Démarrage de MySQL..."
+                        docker run --rm --name $MYSQL_CONTAINER \
+                            -e MYSQL_DATABASE=$DB_NAME \
+                            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                            -p 3308:3306 \
+                            -d mysql:8
+                    fi
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    // Perform SonarQube analysis
-                    sh 'mvn sonar:sonar'
+                    echo "Attente de MySQL (10 sec)..."
+                    sleep 10
+
+                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    '''
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Build') {
             steps {
-                // Deploy the application, skipping tests
-                sh 'mvn deploy -DskipTests'
+                script {
+                    sh 'mvn clean package'
+                }
             }
         }
-    }
 
-    
+        stage('SonarQube Analysis') {
+                    steps {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
+       
+    }
 }
