@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'ouday', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    git branch: 'Etudiant', url: 'https://github.com/ahmedth20/DEVOPS.git'
                 }
             }
         }
