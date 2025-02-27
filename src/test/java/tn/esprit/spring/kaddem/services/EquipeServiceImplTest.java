@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tn.esprit.spring.kaddem.entities.Contrat;
 import tn.esprit.spring.kaddem.entities.Equipe;
 import tn.esprit.spring.kaddem.entities.Etudiant;
@@ -21,6 +23,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceImplTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EquipeServiceImplTest.class);
 
     @Mock
     private EquipeRepository equipeRepository;
@@ -39,6 +43,7 @@ class EquipeServiceImplTest {
         equipe.setIdEquipe(1);
         equipe.setNomEquipe("Team A");
         equipe.setNiveau(Niveau.JUNIOR);
+        equipe.setEtudiants(new HashSet<>()); // Évite les `NullPointerException`
     }
 
     @Test
@@ -80,66 +85,23 @@ class EquipeServiceImplTest {
         assertEquals("Team A", result.getNomEquipe());
     }
 
-   /* @Test
-    void testEvoluerEquipes() {
-        // Créer un ensemble d'étudiants
-        Set<Etudiant> etudiants = new HashSet<>();
-        for (int i = 0; i < 3; i++) {
-            Etudiant etudiant = new Etudiant();
-            Contrat contrat = new Contrat();
-            contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusYears(2)));
-            contrat.setArchive(false);
-            etudiant.setContrats(new HashSet<>(Collections.singletonList(contrat)));
-            etudiants.add(etudiant);
-        }
-
-        // Ajouter les étudiants à l'équipe
-        equipe.setEtudiants(etudiants);
-
-        // S'assurer que l'équipe a un niveau initial
-        equipe.setNiveau(Niveau.JUNIOR);  // Remplacez par le niveau actuel de l'équipe
-
-        // Simuler le retour de findAll
-        when(equipeRepository.findAll()).thenReturn(Collections.singletonList(equipe));
-
-        // Appeler la méthode à tester
-        equipeService.evoluerEquipes();
-
-        // Vérifier que l'équipe a été sauvegardée après l'évolution
-        verify(equipeRepository).save(equipe);
-
-        // Vous pouvez également ajouter une assertion pour vérifier si le niveau de l'équipe a évolué
-        assertNotEquals(Niveau.SENIOR, equipe.getNiveau(), "Le niveau de l'équipe n'a pas évolué correctement.");
-    }*/
-
-
-
     @Test
     void testRetrieveEquipesWithActiveContrats() {
-        // Contrat actif
         Contrat contrat = new Contrat();
-        LocalDate dateFin = LocalDate.now().plusYears(1); // Contrat actif
-        contrat.setDateFinContrat(java.sql.Date.valueOf(dateFin));
-        contrat.setArchive(false); // Assurez-vous que le contrat n'est pas archivé
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().plusYears(1))); // Contrat actif
+        contrat.setArchive(false);
 
-        // Etudiant avec un contrat actif
         Etudiant etudiant = new Etudiant();
         etudiant.setContrats(new HashSet<>(Collections.singletonList(contrat)));
 
-        Set<Etudiant> etudiantsSet = new HashSet<>();
-        etudiantsSet.add(etudiant);
-        equipe.setEtudiants(etudiantsSet);
+        equipe.setEtudiants(new HashSet<>(Collections.singletonList(etudiant)));
 
-        // Simulation du repository qui retourne l'équipe avec le contrat actif
         when(equipeRepository.findAll()).thenReturn(Collections.singletonList(equipe));
 
-        // Appel de la méthode
         List<Equipe> result = equipeService.retrieveEquipesWithActiveContrats();
 
-        // Test si l'équipe est bien présente dans le résultat
         assertFalse(result.isEmpty());
     }
-
 
     @Test
     void testRetrieveEquipesByMinStudents() {
@@ -152,38 +114,36 @@ class EquipeServiceImplTest {
     @Test
     void testCountActiveContractsInEquipe() {
         Contrat contrat = new Contrat();
-        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().plusYears(1))); // Date future pour être actif
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().plusYears(1))); // Contrat actif
         contrat.setArchive(false);
 
         Etudiant etudiant = new Etudiant();
         etudiant.setContrats(new HashSet<>(Collections.singletonList(contrat)));
 
-        Equipe equipe = new Equipe();
         equipe.setEtudiants(new HashSet<>(Collections.singletonList(etudiant)));
 
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
 
         long count = equipeService.countActiveContractsInEquipe(1);
 
-        assertEquals(1, count); // Vérifier qu'il y a bien un contrat actif
+        assertEquals(1, count);
     }
 
     @Test
     void testHasExpiredContracts() {
         Contrat contrat = new Contrat();
-        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
+        contrat.setDateFinContrat(java.sql.Date.valueOf(LocalDate.now().minusDays(1))); // Expiré
         contrat.setArchive(false);
 
         Etudiant etudiant = new Etudiant();
         etudiant.setContrats(new HashSet<>(Collections.singletonList(contrat)));
+
         equipe.setEtudiants(new HashSet<>(Collections.singletonList(etudiant)));
 
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
 
-        // Vérification de l'expiration du contrat en comparant les LocalDate
         assertTrue(equipeService.hasExpiredContracts(1));
     }
-
 
     @Test
     void testRetrieveEquipesWithoutStudents() {
