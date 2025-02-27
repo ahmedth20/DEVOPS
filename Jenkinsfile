@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'Etudiant', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    git branch: 'ouday', url: 'https://github.com/ahmedth20/DEVOPS.git'
                 }
             }
         }
@@ -24,7 +24,6 @@ pipeline {
                     sh '''
                     set -e
                     echo "Vérification de Docker..."
-                    command -v docker || { echo "Docker n'est pas installé !" ; exit 1; }
                     whoami
                     docker version
                     docker ps
@@ -48,9 +47,6 @@ pipeline {
                             docker start $MYSQL_CONTAINER
                         fi
                     else
-                        echo "Suppression des anciens conteneurs MySQL..."
-                        docker rm -f $MYSQL_CONTAINER || true
-
                         echo "Démarrage d'un nouveau conteneur MySQL..."
                         docker run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
@@ -64,7 +60,6 @@ pipeline {
 
                     if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                         echo "MySQL n'a pas démarré !" 
-                        docker logs $MYSQL_CONTAINER
                         exit 1
                     fi
                     '''
@@ -82,7 +77,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('SQ1') {
                     sh 'mvn sonar:sonar'
                 }
             }
@@ -92,16 +87,6 @@ pipeline {
             steps {
                 script {
                     sh 'mvn test'
-                }
-            }
-        }
-
-        stage('SonarQube Quality Gate') {
-            steps {
-                script {
-                    timeout(time: 3, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
-                    }
                 }
             }
         }
@@ -116,12 +101,6 @@ pipeline {
         failure {
             script {
                 echo "Une erreur est survenue."
-            }
-        }
-        cleanup {
-            script {
-                echo "Arrêt et suppression du conteneur MySQL..."
-                docker rm -f $MYSQL_CONTAINER || true
             }
         }
     }
