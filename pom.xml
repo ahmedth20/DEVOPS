@@ -14,10 +14,9 @@
     <name>kaddem</name>
     <description>kaddem</description>
 
-
     <properties>
         <sonar.host.url>http://192.168.33.10:9000</sonar.host.url>
-        <sonar.login>squ_79fa23e2de4700ff4eae8dfcd65f344f57e59a16</sonar.login>
+        <sonar.login>squ_61beae70a9ba0cdeeca05e34feb0cda668a3b0da</sonar.login>
         <java.version>1.8</java.version>
         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
     </properties>

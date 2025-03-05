@@ -47,15 +47,21 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build ') {
             steps {
                 script {
-                    sh 'mvn clean package'
-                    sh 'mvn test'
+                    sh 'mvn clean compile'
+
                 }
             }
         }
-
+        stage('Test') {
+                            steps {
+                                script {
+                                    sh 'mvn test'
+                                }
+                            }
+                        }
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
