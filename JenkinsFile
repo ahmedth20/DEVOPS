@@ -58,7 +58,14 @@ pipeline {
                 }
             }
         }
-       
+         stage('Cleanup') {
+                    steps {
+                        script {
+                            sh 'docker stop $MYSQL_CONTAINER || true'
+                        }
+                    }
+                }
+               
     }
 }
 
