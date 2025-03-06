@@ -1,3 +1,70 @@
+
+pipeline {
+    agent any
+
+    environment {
+        DB_NAME = 'kaddem_db'
+        DB_USER = 'root'
+        DB_PASS = 'yosr'  
+        DB_PORT = '3308'
+        MYSQL_CONTAINER = 'mysql-test'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    git branch: 'universite', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                }
+            }
+        }
+    
+        stage('Start MySQL') {
+            steps {
+                script {
+                    sh '''
+                    if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                        echo "Le conteneur MySQL est déjà en cours d'exécution."
+                    else
+                        echo "Démarrage de MySQL..."
+                        docker run --rm --name $MYSQL_CONTAINER \
+                            -e MYSQL_DATABASE=$DB_NAME \
+                            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                            -p 3308:3306 \
+                            -d mysql:8
+                    fi
+
+                    echo "Attente de MySQL (10 sec)..."
+                    sleep 10
+
+                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    '''
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
+       
+    }
+}
+
+
+
+/*
 pipeline {
     agent any
 
@@ -74,4 +141,4 @@ pipeline {
             }
         }
     }
-}
+}*/
