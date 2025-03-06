@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'kaddem_db'
+        DB_NAME = 'kaddemdb'
         DB_USER = 'root'
         DB_PASS = ''
         DB_PORT = '3306'
-        MYSQL_CONTAINER = 'mysql-kadem'
+        MYSQL_CONTAINER = 'mysql-test'
     }
 
     stages {
@@ -18,20 +18,37 @@ pipeline {
             }
         }
 
+        stage('Test Docker') {
+            steps {
+                script {
+                    sh '''
+                    set -e
+                    echo "Vérification de Docker..."
+                    whoami
+                    docker version
+                    docker ps
+                    '''
+                }
+            }
+        }
+
         stage('Start MySQL') {
             steps {
                 script {
                     sh '''
-                    if [ "$(docker ps -aq -f name=$MYSQL_CONTAINER)" ]; then
-                        if [ "$(docker ps -q -f name=$MYSQL_CONTAINER)" ]; then
+                    set -e
+                    echo "Démarrage de MySQL..."
+
+                    if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
-                            echo "Démarrage du conteneur MySQL..."
+                            echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
                             docker start $MYSQL_CONTAINER
                         fi
                     else
-                        echo "Création et démarrage d'un nouveau conteneur MySQL..."
-                        docker run --rm --name $MYSQL_CONTAINER \
+                        echo "Démarrage d'un nouveau conteneur MySQL..."
+                        docker run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
@@ -41,27 +58,23 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "MySQL n'a pas démarré !" 
+                        exit 1
+                    fi
                     '''
                 }
             }
         }
 
-        stage('Build ') {
+        stage('Build') {
             steps {
                 script {
                     sh 'mvn clean compile'
-
                 }
             }
         }
-        stage('Test') {
-             steps {
-                  script {
-                             sh 'mvn test'
-                                }
-                            }
-                        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -70,14 +83,24 @@ pipeline {
             }
         }
 
-        stage('Cleanup') {
+        stage('Test') {
             steps {
                 script {
-                    sh '''
-                    docker stop $MYSQL_CONTAINER || true
-                    docker rm -f $MYSQL_CONTAINER || true
-                    '''
+                    sh 'mvn test'
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Pipeline terminé."
+            }
+        }
+        failure {
+            script {
+                echo "Une erreur est survenue."
             }
         }
     }
