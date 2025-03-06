@@ -7,6 +7,8 @@ pipeline {
         DB_PASS = ''  
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
+        NEXUS_URL = 'http://localhost:8081/repository/maven-releases/'
+        MAVEN_SETTINGS = '/usr/share/maven/conf/settings.xml' // Assurez-vous que ce chemin est correct
     }
 
     stages {
@@ -38,7 +40,7 @@ pipeline {
                     sh '''
                     set -e
                     echo "Démarrage de MySQL..."
-
+                    
                     # Vérifier si le conteneur existe déjà et est en cours d'exécution
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                         echo "Le conteneur MySQL est déjà en cours d'exécution."
@@ -83,6 +85,15 @@ pipeline {
             }
         }
 
+        // Déplacer le test avant SonarQube Analysis
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -91,10 +102,15 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        // Nouvelle étape de déploiement
+        stage('Deploy to Nexus') {
             steps {
                 script {
-                    sh 'mvn test'
+                    // Déploiement sur Nexus en utilisant mvn deploy
+                    sh '''
+                    echo "Déploiement vers Nexus..."
+                    mvn deploy -DaltDeploymentRepository=deploymentRepo::default::http://localhost:8081/repository/maven-releases/ -s $MAVEN_SETTINGS
+                    '''
                 }
             }
         }
