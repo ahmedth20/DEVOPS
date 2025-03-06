@@ -16,7 +16,7 @@
 
     <properties>
         <sonar.host.url>http://192.168.33.10:9000</sonar.host.url>
-        <sonar.login>squ_f87b5536ae022ce6b7788df84a0455b9a121e0b2</sonar.login>
+        <sonar.login>squ_a8c4528ea2a9d97ec52aa057dc0d30d7a74b907f</sonar.login>
         <java.version>1.8</java.version>
         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
     </properties>
