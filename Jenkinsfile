@@ -76,13 +76,13 @@ pipeline {
             }
         }*/
 
-        stage('Build Docker Image') {
+      /*  stage('Build Docker Image') {
             steps {
                 script {
                     sh 'docker build -t $registry/$IMAGE_NAME .'
                 }
             }
-        }
+        }*/
 
         stage('Deploy to Nexus') {
             steps {
