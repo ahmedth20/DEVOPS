@@ -7,6 +7,8 @@ pipeline {
         DB_PASS = 'ahmedequipe'  // Pas de mot de passe défini dans application-test.properties
         DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
         MYSQL_CONTAINER = 'mysql-test'
+        registryCredentials = "nexus"
+        registry = "192.168.33.10:8081"
     }
 
     stages {
@@ -17,12 +19,11 @@ pipeline {
                 }
             }
         }
-    
+
         stage('Start MySQL') {
             steps {
                 script {
                     sh '''
-                    # Ensure the Docker client is used from WSL
                     WSL_DOCKER="docker"
 
                     if [ $(wsl $WSL_DOCKER ps -a -q -f name=$MYSQL_CONTAINER) ]; then
@@ -53,7 +54,15 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test'
                 }
             }
         }
@@ -66,10 +75,39 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'mvn test'
+                    sh 'docker build -t $registry/springbootapp:1.0 .'
+                }
+            }
+        }
+
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    docker.withRegistry("http://${registry}", registryCredentials) {
+                        sh 'docker push $registry/springbootapp:1.0'     
+                    }
+                }
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                script {
+                    sh '''
+                    echo "Démarrage de l'application..."
+                    docker run -d -p 8080:8080 --name springbootapp $registry/springbootapp:1.0
+                    '''
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    sh 'docker stop $MYSQL_CONTAINER || true'
                 }
             }
         }
