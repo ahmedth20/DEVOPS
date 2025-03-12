@@ -8,7 +8,7 @@ pipeline {
         DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
         registryCredentials = "nexus"
-        registry = "192.168.33.10:8083"
+        registry = "192.168.33.10:8084"
     }
 
     stages {
