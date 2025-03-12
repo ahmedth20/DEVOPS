@@ -4,11 +4,16 @@ pipeline {
     environment {
         DB_NAME = 'kaddemdb'
         DB_USER = 'root'
-        DB_PASS = ''  
+        DB_PASS = ''
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         NEXUS_URL = 'http://localhost:8081/repository/maven-releases/'
-        MAVEN_SETTINGS = '/usr/share/maven/conf/settings.xml' // Assurez-vous que ce chemin est correct
+        MAVEN_SETTINGS = '/usr/share/maven/conf/settings.xml' // Vérifiez ce chemin
+    }
+
+    options {
+        timestamps() // Active les timestamps dans les logs
+        timeout(time: 30, unit: 'MINUTES') // Timeout global du pipeline
     }
 
     stages {
@@ -24,9 +29,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    set -e
                     echo "Vérification de Docker..."
-                    whoami
                     docker version
                     docker ps
                     '''
@@ -38,10 +41,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    set -e
                     echo "Démarrage de MySQL..."
-                    
-                    # Vérifier si le conteneur existe déjà et est en cours d'exécution
+
+                    # Vérifier si le conteneur existe déjà
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                         echo "Le conteneur MySQL est déjà en cours d'exécution."
                     elif docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
@@ -50,13 +52,14 @@ pipeline {
                     else
                         echo "Démarrage d'un nouveau conteneur MySQL..."
                         docker run --name $MYSQL_CONTAINER \
+                            --health-cmd="mysqladmin ping --silent" \
+                            --health-interval=10s --health-timeout=5s --health-retries=5 \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
                             -d mysql:8
                     fi
 
-                    # Attente que MySQL soit prêt
                     echo "Attente de MySQL pour être prêt..."
                     for i in {1..30}; do
                         if docker exec $MYSQL_CONTAINER mysqladmin --user=root --password=$DB_PASS ping --silent; then
@@ -67,9 +70,8 @@ pipeline {
                         sleep 2
                     done
 
-                    # Si MySQL n'est pas prêt après 60 secondes, échouer le pipeline
                     if ! docker exec $MYSQL_CONTAINER mysqladmin --user=root --password=$DB_PASS ping --silent; then
-                        echo "MySQL n'a pas démarré correctement après 30 secondes." 
+                        echo "Échec du démarrage de MySQL après 60 secondes."
                         exit 1
                     fi
                     '''
@@ -85,7 +87,6 @@ pipeline {
             }
         }
 
-        // Déplacer le test avant SonarQube Analysis
         stage('Test') {
             steps {
                 script {
@@ -102,15 +103,15 @@ pipeline {
             }
         }
 
-        // Nouvelle étape de déploiement
         stage('Deploy to Nexus') {
             steps {
-                script {
-                    // Déploiement sur Nexus en utilisant mvn deploy
-                    sh '''
-                    echo "Déploiement vers Nexus..."
-                    mvn deploy -DaltDeploymentRepository=deploymentRepo::default::http://localhost:8081/repository/maven-releases/ -s $MAVEN_SETTINGS
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    script {
+                        sh '''
+                        echo "Déploiement vers Nexus..."
+                        mvn deploy -DskipTests=true -DaltDeploymentRepository=deploymentRepo::default::$NEXUS_URL -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS -s $MAVEN_SETTINGS
+                        '''
+                    }
                 }
             }
         }
@@ -125,6 +126,13 @@ pipeline {
         failure {
             script {
                 echo "Une erreur est survenue."
+            }
+        }
+        cleanup {
+            script {
+                echo "Nettoyage des ressources..."
+                docker stop $MYSQL_CONTAINER || true
+                docker rm $MYSQL_CONTAINER || true
             }
         }
     }
