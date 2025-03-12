@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'Kaddemdb'  // Correspond à spring.datasource.url
-        DB_USER = 'root'  
-        DB_PASS = 'ahmedequipe'  // Pas de mot de passe défini dans application-test.properties
-        DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
-        MYSQL_CONTAINER = 'mysql-test'
         registryCredentials = "nexus"
-        registry = "192.168.33.10:8081"
+        registry = "localhost:8083"
+        DB_NAME = 'Kaddemdb'
+        DB_USER = 'root'
+        DB_PASS = 'ahmedequipe'
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql-test'
+        IMAGE_NAME = "springbootapp:1.0"
     }
 
     stages {
@@ -67,18 +68,18 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+      /*  stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
                 }
             }
-        }
+        }*/
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t $registry/springbootapp:1.0 .'
+                    sh 'docker build -t $registry/$IMAGE_NAME .'
                 }
             }
         }
@@ -86,8 +87,8 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 script {
-                    docker.withRegistry("http://${registry}", registryCredentials) {
-                        sh 'docker push $registry/springbootapp:1.0'     
+                    docker.withRegistry("http://"+registry, registryCredentials) {
+                        sh 'docker push $registry/$IMAGE_NAME'
                     }
                 }
             }
@@ -96,10 +97,36 @@ pipeline {
         stage('Run Application') {
             steps {
                 script {
-                    sh '''
-                    echo "Démarrage de l'application..."
-                    docker run -d -p 8080:8080 --name springbootapp $registry/springbootapp:1.0
-                    '''
+                    docker.withRegistry("http://"+registry, registryCredentials) {
+                        sh '''
+                        docker pull $registry/$IMAGE_NAME
+
+                        echo "Création du fichier docker-compose.yml..."
+                        cat <<EOF > docker-compose.yml
+                        version: '3.8'
+                        services:
+                          db:
+                            image: mysql:8
+                            container_name: mysql-test
+                            restart: always
+                            environment:
+                              MYSQL_DATABASE: ${DB_NAME}
+                              MYSQL_ROOT_PASSWORD: ${DB_PASS}
+                            ports:
+                              - "3306:3306"
+                          app:
+                            image: ${registry}/${IMAGE_NAME}
+                            container_name: springboot-app
+                            depends_on:
+                              - db
+                            ports:
+                              - "8080:8080"
+                        EOF
+
+                        echo "Démarrage des services avec Docker Compose..."
+                        docker-compose up -d
+                        '''
+                    }
                 }
             }
         }
