@@ -29,6 +29,7 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    #!/bin/bash
                     echo "Vérification de Docker..."
                     docker version
                     docker ps
@@ -41,28 +42,29 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    #!/bin/bash
                     echo "Démarrage de MySQL..."
 
                     # Vérifier si le conteneur existe déjà
-                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                    if docker ps --format '{{.Names}}' | grep -q "^${MYSQL_CONTAINER}$"; then
                         echo "Le conteneur MySQL est déjà en cours d'exécution."
-                    elif docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                    elif docker ps -a --format '{{.Names}}' | grep -q "^${MYSQL_CONTAINER}$"; then
                         echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                        docker start $MYSQL_CONTAINER
+                        docker start "${MYSQL_CONTAINER}"
                     else
                         echo "Démarrage d'un nouveau conteneur MySQL..."
-                        docker run --name $MYSQL_CONTAINER \
+                        docker run --name "${MYSQL_CONTAINER}" \
                             --health-cmd="mysqladmin ping --silent" \
                             --health-interval=10s --health-timeout=5s --health-retries=5 \
-                            -e MYSQL_DATABASE=$DB_NAME \
-                            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
-                            -p $DB_PORT:3306 \
+                            -e MYSQL_DATABASE="${DB_NAME}" \
+                            -e MYSQL_ROOT_PASSWORD="${DB_PASS}" \
+                            -p "${DB_PORT}":3306 \
                             -d mysql:8
                     fi
 
                     echo "Attente de MySQL pour être prêt..."
-                    for i in {1..30}; do
-                        if docker exec $MYSQL_CONTAINER mysqladmin --user=root --password=$DB_PASS ping --silent; then
+                    for i in $(seq 1 30); do
+                        if docker exec "${MYSQL_CONTAINER}" mysqladmin --user=root --password="${DB_PASS}" ping --silent; then
                             echo "MySQL est prêt."
                             break
                         fi
@@ -70,7 +72,7 @@ pipeline {
                         sleep 2
                     done
 
-                    if ! docker exec $MYSQL_CONTAINER mysqladmin --user=root --password=$DB_PASS ping --silent; then
+                    if ! docker exec "${MYSQL_CONTAINER}" mysqladmin --user=root --password="${DB_PASS}" ping --silent; then
                         echo "Échec du démarrage de MySQL après 60 secondes."
                         exit 1
                     fi
@@ -108,8 +110,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     script {
                         sh '''
+                        #!/bin/bash
                         echo "Déploiement vers Nexus..."
-                        mvn deploy -DskipTests=true -DaltDeploymentRepository=deploymentRepo::default::$NEXUS_URL -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS -s $MAVEN_SETTINGS
+                        mvn deploy -DskipTests=true -DaltDeploymentRepository=deploymentRepo::default::${NEXUS_URL} -Dusername=${NEXUS_USER} -Dpassword=${NEXUS_PASS} -s ${MAVEN_SETTINGS}
                         '''
                     }
                 }
@@ -120,19 +123,17 @@ pipeline {
     post {
         always {
             script {
-                echo "Pipeline terminé."
+                echo "Pipeline terminé. Nettoyage des ressources..."
+                sh '''
+                #!/bin/bash
+                docker stop "${MYSQL_CONTAINER}" || true
+                docker rm "${MYSQL_CONTAINER}" || true
+                '''
             }
         }
         failure {
             script {
                 echo "Une erreur est survenue."
-            }
-        }
-        cleanup {
-            script {
-                echo "Nettoyage des ressources..."
-                docker stop $MYSQL_CONTAINER || true
-                docker rm $MYSQL_CONTAINER || true
             }
         }
     }
