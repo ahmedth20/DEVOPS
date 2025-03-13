@@ -76,16 +76,6 @@ pipeline {
                 """
             }
         }
-    
-
-    post {
-        success {
-            echo '✅ Déploiement réussi sur Nexus !'
-        }
-        failure {
-            echo '❌ Échec du déploiement.'
-        }
-    }
 
          stage('Cleanup') {
                     steps {
