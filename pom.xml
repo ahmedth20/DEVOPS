@@ -29,18 +29,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-
-
-
-
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -68,8 +62,7 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
-                <version>0.0.1</version>
- <!-- Remplace par la version que tu veux utiliser -->
+                <version>3.9.1</version> <!-- Remplacé par une version stable -->
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -85,11 +78,12 @@
             </plugin>
         </plugins>
     </build>
+    
     <distributionManagement>
         <repository>
             <id>deploymentRepo</id>
             <name>Nexus Repository</name>
-            <url>http://localhost:8081/repository/maven-releases/</url>
+            <url>http://localhost:8081/repository/maven-snapshots/</url> <!-- Changer en maven-snapshots -->
         </repository>
     </distributionManagement>
 </project>
