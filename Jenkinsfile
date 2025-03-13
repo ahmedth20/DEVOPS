@@ -10,7 +10,7 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         IMAGE_NAME = "springbootapp:1.0"
-        DOCKER_REGISTRY_URL = "http://localhost:8083"  // Remplacez par l'URL de votre registre Docker si nécessaire
+        DOCKER_REGISTRY_URL = "https://localhost:8083"  // URL en HTTPS pour Nexus
     }
 
     stages {
@@ -85,25 +85,31 @@ pipeline {
             }
         } */
 
-       stage('Deploy to Nexus') {
-    steps {
-        script {
-            // Login to Docker registry using password stdin
-            sh '''
-            echo admin | docker login -u admin --password-stdin http://localhost:8083
-            '''
-            docker.withRegistry('http://localhost:8083', registryCredentials) {
-                sh 'docker push $registry/$IMAGE_NAME'
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    // Connexion au registre Docker Nexus en HTTPS avec echo admin
+                    sh '''
+                    echo admin | docker login -u admin --password-stdin https://localhost:8083
+                    '''
+                    docker.withRegistry("https://$registry", registryCredentials) {
+                        sh 'docker push $registry/$IMAGE_NAME'
+                    }
+                }
             }
         }
-    }
-}
+
         stage('Run Application') {
             steps {
                 script {
-                    docker.withRegistry("http://"+registry, registryCredentials) {
+                    docker.withRegistry("https://$registry", registryCredentials) {
                         sh '''
                         docker pull $registry/$IMAGE_NAME
+
+                        if [ "$(docker images -q $registry/$IMAGE_NAME)" == "" ]; then
+                            echo "Erreur: L'image Docker n'a pas été téléchargée correctement"
+                            exit 1
+                        fi
 
                         echo "Création du fichier docker-compose.yml..."
                         cat <<EOF > docker-compose.yml
@@ -139,6 +145,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker stop $MYSQL_CONTAINER || true'
+                    sh 'docker rm $MYSQL_CONTAINER || true'  // Supprimer le conteneur après l'arrêt
                 }
             }
         }
