@@ -10,7 +10,7 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         IMAGE_NAME = "springbootapp:1.0"
-        DOCKER_REGISTRY_URL = "https://localhost:8083"  // URL en HTTPS pour Nexus
+        DOCKER_REGISTRY_URL = "http://localhost:8083"  // URL en HTTPS pour Nexus
     }
 
     stages {
@@ -88,11 +88,13 @@ pipeline {
        stage('Deploy to Nexus') {
     steps {
         script {
+               // Utiliser le bon contexte Docker
+            sh 'docker context use desktop-linux'
             // Login to Nexus Docker registry using HTTP
             sh '''
-            echo admin | docker login -u admin --password-stdin https://localhost:8083
+            echo admin | docker login -u admin --password-stdin http://localhost:8083
             '''
-            docker.withRegistry('https://localhost:8083', registryCredentials) {
+            docker.withRegistry('http://localhost:8083', registryCredentials) {
                 sh 'docker push $registry/$IMAGE_NAME'
             }
         }
@@ -103,7 +105,7 @@ pipeline {
         stage('Run Application') {
             steps {
                 script {
-                    docker.withRegistry("https://$registry", registryCredentials) {
+                    docker.withRegistry("http://$registry", registryCredentials) {
                         sh '''
                         docker pull $registry/$IMAGE_NAME
 
