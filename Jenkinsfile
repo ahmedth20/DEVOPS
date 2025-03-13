@@ -88,8 +88,7 @@ pipeline {
        stage('Deploy to Nexus') {
     steps {
         script {
-               // Utiliser le bon contexte Docker
-            sh 'docker context use desktop-linux'
+            
             // Login to Nexus Docker registry using HTTP
             sh '''
             echo admin | docker login -u admin --password-stdin http://localhost:8083
