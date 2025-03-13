@@ -68,7 +68,8 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
-                <version>4.0.0.4121</version> <!-- Remplace par la version que tu veux utiliser -->
+                <version>0.0.1</version>
+ <!-- Remplace par la version que tu veux utiliser -->
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
