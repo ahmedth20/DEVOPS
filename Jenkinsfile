@@ -85,20 +85,19 @@ pipeline {
             }
         } */
 
-        stage('Deploy to Nexus') {
-            steps {
-                script {
-                    // Login to Docker registry using password stdin
-                    sh '''
-                    echo admin | docker login -u admin --password-stdin $DOCKER_REGISTRY_URL
-                    docker.withRegistry("http://"+registry, registryCredentials) {
-                        sh 'docker push $registry/$IMAGE_NAME'
-                    }
-                    '''
-                }
+       stage('Deploy to Nexus') {
+    steps {
+        script {
+            // Login to Docker registry using password stdin
+            sh '''
+            echo "your_password" | docker login -u admin --password-stdin http://localhost:8083
+            '''
+            docker.withRegistry('http://localhost:8083', registryCredentials) {
+                sh 'docker push $registry/$IMAGE_NAME'
             }
         }
-
+    }
+}
         stage('Run Application') {
             steps {
                 script {
