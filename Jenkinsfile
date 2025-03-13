@@ -47,7 +47,7 @@ pipeline {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
-                    sh 'docker build -t guesmimelek/kaddem-app:0.0.1 .'
+                    sh 'docker build -t ramezzorgui/kaddem-app:0.0.1 .'
                 }
             }
         }
@@ -68,7 +68,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
                         sh '''
                             echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push guesmimelek/kaddem-app:0.0.1
+                            docker push ramezzorgui/kaddem-app:0.0.1
                         '''
                     }
                 }
