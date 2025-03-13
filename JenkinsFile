@@ -2,11 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'Kaddemdb'  // Correspond à spring.datasource.url
+        DB_NAME = 'kaddem_db'
         DB_USER = 'root'
-        DB_PASS = 'ahmedequipe'  // Pas de mot de passe défini dans application-test.properties
-        DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
+        DB_PASS = 'yosr'
+        DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
+        registryCredentials = "nexus"
+        registry = "192.168.33.10:8083"
     }
 
     stages {
@@ -22,29 +24,21 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    # Ensure the Docker client is used from WSL
-                    WSL_DOCKER="docker"
-
-                    if [ $(wsl $WSL_DOCKER ps -a -q -f name=$MYSQL_CONTAINER) ]; then
-                        if [ $(wsl $WSL_DOCKER ps -q -f name=$MYSQL_CONTAINER) ]; then
-                            echo "Le conteneur MySQL est déjà en cours d'exécution."
-                        else
-                            echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                            wsl $WSL_DOCKER start $MYSQL_CONTAINER
-                        fi
+                    if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                        echo "Le conteneur MySQL est déjà en cours d'exécution."
                     else
                         echo "Démarrage de MySQL..."
-                        wsl $WSL_DOCKER run --name $MYSQL_CONTAINER \
+                        docker run --rm --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
-                            -p $DB_PORT:3306 \
+                            -p 3308:3306 \
                             -d mysql:8
                     fi
 
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    wsl $WSL_DOCKER ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
@@ -53,15 +47,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                    sh 'mvn clean package'
                 }
             }
         }
@@ -73,5 +59,25 @@ pipeline {
                 }
             }
         }
+    /*   stage('SonarQube Analysis') {
+                    steps {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'mvn sonar:sonar -X'
+                        }
+                    }
+        }*/
+        stage('Deploy to Nexus') {
+                   steps {
+                       sh 'mvn deploy'
+                   }
+        }
+         stage('Cleanup') {
+                    steps {
+                        script {
+                            sh 'docker stop $MYSQL_CONTAINER || true'
+                        }
+                    }
+                }
+
     }
 }

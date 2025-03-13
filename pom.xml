@@ -113,5 +113,14 @@
                 </configuration>
             </plugin>
         </plugins>
+
     </build>
+    <distributionManagement>
+        <repository>
+            <id>nexus</id>  <!-- Doit correspondre à l'ID dans settings.xml -->
+            <url>http://192.168.33.10:8081/repository/devopss/</url>
+        </repository>
+    </distributionManagement>
+
+
 </project>
