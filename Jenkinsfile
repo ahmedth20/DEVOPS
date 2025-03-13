@@ -90,9 +90,9 @@ pipeline {
         script {
             // Login to Nexus Docker registry using HTTP
             sh '''
-            echo admin | docker login -u admin --password-stdin http://localhost:8083
+            echo admin | docker login -u admin --password-stdin https://localhost:8083
             '''
-            docker.withRegistry('http://localhost:8083', registryCredentials) {
+            docker.withRegistry('https://localhost:8083', registryCredentials) {
                 sh 'docker push $registry/$IMAGE_NAME'
             }
         }
