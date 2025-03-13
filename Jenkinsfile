@@ -43,12 +43,20 @@ pipeline {
             }
         }
 
-
-         stage('Docker Build') {
+        stage('Docker Build') {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
-                    sh 'docker build -t ramezzorgui/kaddem:0.0.1 .'
+                    sh 'docker build -t guesmimelek/kaddem-app:0.0.1 .'
+                }
+            }
+        }
+
+        stage('List Docker Images') {
+            steps {
+                script {
+                    echo '📦 Listing Docker Images...'
+                    sh 'docker images'
                 }
             }
         }
@@ -60,12 +68,21 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
                         sh '''
                             echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push ramezzorgui/kaddem:0.0.1
+                            docker push guesmimelek/kaddem-app:0.0.1
                         '''
                     }
                 }
             }
         }
 
+stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    echo '🚀 Deploying with Docker Compose...'
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+        
     }
 }
