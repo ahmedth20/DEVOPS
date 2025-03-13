@@ -106,17 +106,11 @@ pipeline {
         }
 
         // Nouvelle étape de déploiement
-        stage('Deploy to Nexus') {
+        stage('Deploy') {
             steps {
                 script {
-                    // Exécuter l'installation avec Maven avant le déploiement
-                    sh "'${MAVEN_HOME}/bin/mvn' clean install -DskipTests -e -X"
-
-                    // Déploiement sur Nexus en utilisant mvn deploy
-                    sh '''
-                    echo "Déploiement vers Nexus..."
-                    mvn deploy -DaltDeploymentRepository=deploymentRepo::default::http://localhost:8081/repository/maven-releases/ -s $MAVEN_SETTINGS
-                    '''
+                    // Votre code de déploiement
+                    sh 'mvn deploy'
                 }
             }
         }
