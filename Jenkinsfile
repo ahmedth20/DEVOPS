@@ -90,7 +90,7 @@ pipeline {
         script {
             // Login to Docker registry using password stdin
             sh '''
-            echo "your_password" | docker login -u admin --password-stdin http://localhost:8083
+            echo admin | docker login -u admin --password-stdin http://localhost:8083
             '''
             docker.withRegistry('http://localhost:8083', registryCredentials) {
                 sh 'docker push $registry/$IMAGE_NAME'
