@@ -10,6 +10,7 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         IMAGE_NAME = "springbootapp:1.0"
+        DOCKER_REGISTRY_URL = "http://localhost:8083"  // Remplacez par l'URL de votre registre Docker si nécessaire
     }
 
     stages {
@@ -68,28 +69,32 @@ pipeline {
             }
         }
 
-      /*  stage('SonarQube Analysis') {
+        /*  stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
                 }
             }
-        }*/
+        } */
 
-      /*  stage('Build Docker Image') {
+        /* stage('Build Docker Image') {
             steps {
                 script {
                     sh 'docker build -t $registry/$IMAGE_NAME .'
                 }
             }
-        }*/
+        } */
 
         stage('Deploy to Nexus') {
             steps {
                 script {
+                    // Login to Docker registry using password stdin
+                    sh '''
+                    echo admin | docker login -u admin --password-stdin $DOCKER_REGISTRY_URL
                     docker.withRegistry("http://"+registry, registryCredentials) {
                         sh 'docker push $registry/$IMAGE_NAME'
                     }
+                    '''
                 }
             }
         }
