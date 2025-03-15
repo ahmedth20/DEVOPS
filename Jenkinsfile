@@ -53,7 +53,7 @@ pipeline {
                     try {
                         sh '''
                         set -e
-                        echo "Démarrage de MySQL..."
+                        echo "Démarrage de MySQL avec mot de passe vide..."
 
                         if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
@@ -67,6 +67,7 @@ pipeline {
                             docker run --name $MYSQL_CONTAINER \
                                 -e MYSQL_DATABASE=$DB_NAME \
                                 -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                                -e MYSQL_ALLOW_EMPTY_PASSWORD=true \
                                 -p $DB_PORT:3306 \
                                 -d mysql:8
                         fi
