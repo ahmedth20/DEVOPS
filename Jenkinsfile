@@ -1,7 +1,40 @@
 pipeline {
     agent any
-    
+    environment {
+        DB_NAME = 'kaddemdb'
+        DB_USER = 'root'
+        DB_PASS = ''
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql-test'
+    }
+
     stages {
+        stage('Start MySQL') {
+            steps {
+                script {
+                    echo 'Starting MySQL container...'
+                    // Start MySQL container
+                    sh """
+                    docker run --name ${MYSQL_CONTAINER} \
+                        -e MYSQL_ROOT_PASSWORD=${DB_PASS} \
+                        -e MYSQL_DATABASE=${DB_NAME} \
+                        -e MYSQL_USER=${DB_USER} \
+                        -e MYSQL_PASSWORD=${DB_PASS} \
+                        -p ${DB_PORT}:${DB_PORT} \
+                        -d mysql:8.0
+                    """
+                    echo 'Waiting for MySQL to be ready...'
+                    // Wait for MySQL to be ready
+                    sh '''
+                    until docker exec mysql-test mysqladmin --user=root --password=rootpassword ping --silent; do
+                        sleep 1
+                    done
+                    echo "MySQL is ready!"
+                    '''
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 // Clean and compile the project
@@ -75,7 +108,7 @@ pipeline {
             }
         }
 
-stage('Deploy with Docker Compose') {
+        stage('Deploy with Docker Compose') {
             steps {
                 script {
                     echo '🚀 Deploying with Docker Compose...'
@@ -83,6 +116,5 @@ stage('Deploy with Docker Compose') {
                 }
             }
         }
-        
     }
 }
