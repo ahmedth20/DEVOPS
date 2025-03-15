@@ -74,15 +74,5 @@ pipeline {
                 }
             }
         }
-
-stage('Deploy with Docker Compose') {
-            steps {
-                script {
-                    echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d'
-                }
-            }
-        }
-        
     }
 }
