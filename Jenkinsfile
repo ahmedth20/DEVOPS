@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = ''
+        DB_PASS = 
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
