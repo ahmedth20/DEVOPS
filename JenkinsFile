@@ -161,7 +161,7 @@ pipeline {
                            steps {
                                script {
                                    echo 'Building Docker Image (Standard Method)'
-                                   sh "docker build -t ${DOCKERHUB_REPO}:latest -f Dockerfile.dockerfile ."
+                                   sh "docker build -t ${DOCKERHUB_REPO}:latest -f Dockerfile ."
                                }
                            }
                        }
