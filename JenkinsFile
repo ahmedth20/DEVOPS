@@ -132,9 +132,9 @@ pipeline {
                            sh 'mvn clean package -DskipTests'
                        }
                    }
-               }
+        }
 
-               stage('Push Docker Image to Docker Hub') {
+        stage('Push Docker Image to Docker Hub') {
                    parallel {
                        stage('Build New Docker Image') {
                            steps {
@@ -180,6 +180,7 @@ pipeline {
                           }
                       }
                }
+              }
          stage('Cleanup') {
                     steps {
                         script {
@@ -187,6 +188,5 @@ pipeline {
                         }
                     }
                 }
-
-    }
-}
+          }
+      }
