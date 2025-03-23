@@ -12,11 +12,11 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = '192.168.33.10:8081'
+        NEXUS_URL = 'http://192.168.33.10:8081'
         NEXUS_REPOSITORY = "devops"
         NEXUS_CREDENTIAL_ID = "nexusCredential"
         ARTIFACT_VERSION = "${BUILD_NUMBER}"
-        IMAGE_NAME = "yosrcharek/kaddem"
+        DOCKER_IMAGE = "yosrcharek/kaddem"
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "yosrcharek/kaddem"
@@ -140,7 +140,7 @@ pipeline {
                            steps {
                                script {
                                    echo 'Building Docker Image (New Method)'
-                                   sh "docker build -t $DOCKER_IMAGE -f Dockerfile.dockerfile ."
+                                   sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
                                }
                            }
                        }
@@ -166,18 +166,19 @@ pipeline {
                            }
                        }
 
-                       stage('Push Docker Image') {
-                           steps {
-                               script {
-                                   echo 'Pushing Docker Image to Docker Hub'
-                                   withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                       sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                                       sh "docker push ${DOCKERHUB_REPO}:latest"
-                                   }
-                               }
-                           }
-                       }
-                   }
+                      stage('Push Docker Image') {
+                          steps {
+                              script {
+                                  echo 'Pushing Docker Image to Docker Hub'
+                                  withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                      sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                                      sh "docker tag $DOCKER_IMAGE:latest $DOCKER_IMAGE:$BUILD_NUMBER"
+                                      sh "docker push $DOCKER_IMAGE:$BUILD_NUMBER"
+                                      sh "docker push $DOCKER_IMAGE:latest"
+                                  }
+                              }
+                          }
+                      }
                }
          stage('Cleanup') {
                     steps {
