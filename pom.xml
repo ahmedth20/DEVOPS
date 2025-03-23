@@ -13,7 +13,8 @@
 
     <groupId>tn.esprit.spring</groupId>
     <artifactId>devops</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
+
     <name>kaddem</name>
     <description>kaddem</description>
     <version>1.0-SNAPSHOT</version>
