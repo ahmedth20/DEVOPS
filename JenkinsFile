@@ -10,6 +10,8 @@ pipeline {
         DB_PASS = 'yosr'
         DB_PORT = '3308'
         MYSQL_CONTAINER = 'mysql-test'
+        PROMETHEUS_CONTAINER = 'prometheus'
+        GRAFANA_CONTAINER = 'grafana'
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = '192.168.33.10:8081'
@@ -70,14 +72,16 @@ pipeline {
                 }
             }
         }
-    /*   stage('SonarQube Analysis') {
+
+        /*   stage('SonarQube Analysis') {
                     steps {
                         withSonarQubeEnv('SonarQube') {
                             sh 'mvn sonar:sonar -X'
                         }
                     }
         }*/
-    /*     stage('Deploy to Nexus') {
+
+        /*     stage('Deploy to Nexus') {
             steps {
                 sh """
                 mvn deploy \
@@ -86,18 +90,14 @@ pipeline {
             }
         }
 */
+
         stage("publish to nexus") {
             steps {
                 script {
-                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
                     pom = readMavenPom file: "pom.xml";
-                    // Find built artifact under target folder
                     filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    // Print some info from the artifact found
                     echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    // Extract the path from the File found
                     artifactPath = filesByGlob[0].path;
-                    // Assign to a boolean response verifying If the artifact name exists
                     artifactExists = fileExists artifactPath;
 
                     if(artifactExists) {
@@ -112,7 +112,6 @@ pipeline {
                             repository: NEXUS_REPOSITORY,
                             credentialsId: NEXUS_CREDENTIAL_ID,
                             artifacts: [
-                                // Artifact generated such as .jar, .ear and .war files.
                                 [artifactId: pom.artifactId,
                                 classifier: '',
                                 file: artifactPath,
@@ -126,67 +125,99 @@ pipeline {
                 }
             }
         }
+
         stage('Build JAR') {
-                   steps {
-                       script {
-                           sh 'mvn clean package -DskipTests'
-                       }
-                   }
+            steps {
+                script {
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
         }
 
         stage('Push Docker Image to Docker Hub') {
-                   parallel {
-                       stage('Build New Docker Image') {
-                           steps {
-                               script {
-                                   echo 'Building Docker Image (New Method)'
-                                   sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
-                               }
-                           }
-                       }
-
-                       stage('Push New Docker Image') {
-                           steps {
-                               script {
-                                   echo 'Pushing Docker Image (New Method)'
-                                   withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                       sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                                       sh "docker push $DOCKER_IMAGE"
-                                   }
-                               }
-                           }
-                       }
-
-                       stage('Build Docker Image') {
-                           steps {
-                               script {
-                                   echo 'Building Docker Image (Standard Method)'
-                                   sh "docker build -t ${DOCKERHUB_REPO}:latest -f Dockerfile ."
-                               }
-                           }
-                       }
-
-                      stage('Push Docker Image') {
-                          steps {
-                              script {
-                                  echo 'Pushing Docker Image to Docker Hub'
-                                  withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                      sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                                      sh "docker tag $DOCKER_IMAGE:latest $DOCKER_IMAGE:$BUILD_NUMBER"
-                                      sh "docker push $DOCKER_IMAGE:$BUILD_NUMBER"
-                                      sh "docker push $DOCKER_IMAGE:latest"
-                                  }
-                              }
-                          }
-                      }
-               }
-              }
-         stage('Cleanup') {
+            parallel {
+                stage('Build New Docker Image') {
                     steps {
                         script {
-                            sh 'docker stop $MYSQL_CONTAINER || true'
+                            echo 'Building Docker Image (New Method)'
+                            sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
                         }
                     }
                 }
-          }
-      }
+
+                stage('Push New Docker Image') {
+                    steps {
+                        script {
+                            echo 'Pushing Docker Image (New Method)'
+                            withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                                sh "docker push $DOCKER_IMAGE"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        stage('Start Prometheus') {
+                   steps {
+                       script {
+                           sh '''
+                           if [ $(docker ps -q -f name=$PROMETHEUS_CONTAINER) ]; then
+                               echo "Le conteneur Prometheus est déjà en cours d'exécution."
+                           else
+                               echo "Démarrage de Prometheus..."
+                               docker run -d --name=$PROMETHEUS_CONTAINER -p 9090:9090 prom/prometheus
+                           fi
+
+                           echo "Attente de Prometheus (5 sec)..."
+                           sleep 5
+
+                           docker ps | grep $PROMETHEUS_CONTAINER || (echo "Prometheus n'a pas démarré !" && exit 1)
+                           '''
+                       }
+                   }
+               }
+
+               stage('Start Grafana') {
+                   steps {
+                       script {
+                           sh '''
+                           if [ $(docker ps -q -f name=$GRAFANA_CONTAINER) ]; then
+                               echo "Le conteneur Grafana est déjà en cours d'exécution."
+                           else
+                               echo "Démarrage de Grafana..."
+                               docker run -d --name=$GRAFANA_CONTAINER -p 3000:3000 grafana/grafana
+                           fi
+
+                           echo "Attente de Grafana (5 sec)..."
+                           sleep 5
+
+                           docker ps | grep $GRAFANA_CONTAINER || (echo "Grafana n'a pas démarré !" && exit 1)
+                           '''
+                       }
+                   }
+               }
+
+        stage('Docker Compose') {
+            steps {
+                echo 'Starting Docker containers'
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    sh '''
+                    echo "Arrêt des conteneurs..."
+                    docker stop $MYSQL_CONTAINER || true
+                    docker stop $PROMETHEUS_CONTAINER || true
+                    docker stop $GRAFANA_CONTAINER || true
+                    '''
+                }
+            }
+        }
+    }
+}
