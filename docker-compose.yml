@@ -5,7 +5,7 @@ services:
     image: yosrcharek/kaddem:latest
     container_name: kaddem_app
     ports:
-      - "8089:8089"
+        - "192.168.33.10:8089:8089"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3308/kaddem\db?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
@@ -30,6 +30,19 @@ services:
       - spring-boot-network
     restart: always
 
+  nexus:
+    image: sonatype/nexus3
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    environment:
+      - NEXUS_SECURITY_RANDOMPASSWORD=false
+    volumes:
+      - nexus-data:/nexus-data
+    networks:
+      - spring-boot-network
+    restart: always
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -47,4 +60,4 @@ networks:
 
 volumes:
   mysql-data:
-  grafana_data:
+  nexus-data:
