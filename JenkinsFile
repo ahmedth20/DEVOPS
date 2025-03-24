@@ -73,13 +73,13 @@ pipeline {
             }
         }
 
-        /*   stage('SonarQube Analysis') {
+           stage('SonarQube Analysis') {
                     steps {
                         withSonarQubeEnv('SonarQube') {
                             sh 'mvn sonar:sonar -X'
                         }
                     }
-        }*/
+        }
 
 
         stage("Deploy to Nexus") {
