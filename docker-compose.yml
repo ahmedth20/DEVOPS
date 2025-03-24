@@ -5,7 +5,7 @@ services:
     image: yosrcharek/kaddem:latest
     container_name: kaddem_app
     ports:
-        - "192.168.33.10:8089:8089"
+        - "8089:8089"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3308/kaddem\db?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root

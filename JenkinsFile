@@ -81,17 +81,8 @@ pipeline {
                     }
         }*/
 
-        /*     stage('Deploy to Nexus') {
-            steps {
-                sh """
-                mvn deploy \
-                    -DaltDeploymentRepository=${NEXUS_REPOSITORY}::default::${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/
-                """
-            }
-        }
-*/
 
-        stage("publish to nexus") {
+        stage("Deploy to Nexus") {
             steps {
                 script {
                     pom = readMavenPom file: "pom.xml";
@@ -160,45 +151,45 @@ pipeline {
         }
 
 
-        stage('Start Prometheus') {
-                   steps {
-                       script {
-                           sh '''
-                           if [ $(docker ps -q -f name=$PROMETHEUS_CONTAINER) ]; then
-                               echo "Le conteneur Prometheus est déjà en cours d'exécution."
-                           else
-                               echo "Démarrage de Prometheus..."
-                               docker run -d --name=$PROMETHEUS_CONTAINER -p 9090:9090 prom/prometheus
-                           fi
+     stage('Start Prometheus') {
+         steps {
+             script {
+                 sh '''
+                 if [ $(docker ps -q -f name=$PROMETHEUS_CONTAINER) ]; then
+                     echo "Le conteneur Prometheus est déjà en cours d'exécution."
+                 else
+                     if [ $(docker ps -aq -f name=$PROMETHEUS_CONTAINER) ]; then
+                         echo "Suppression de l'ancien conteneur Prometheus..."
+                         docker rm -f $PROMETHEUS_CONTAINER
+                     fi
+                     echo "Démarrage de Prometheus..."
+                     docker run -d --name=$PROMETHEUS_CONTAINER -p 9090:9090 prom/prometheus
+                 fi
+                 '''
+             }
+         }
+     }
 
-                           echo "Attente de Prometheus (5 sec)..."
-                           sleep 5
 
-                           docker ps | grep $PROMETHEUS_CONTAINER || (echo "Prometheus n'a pas démarré !" && exit 1)
-                           '''
-                       }
-                   }
-               }
+         stage('Start Grafana') {
+             steps {
+                 script {
+                     sh '''
+                     if [ $(docker ps -q -f name=$GRAFANA_CONTAINER) ]; then
+                         echo "Le conteneur Grafana est déjà en cours d'exécution."
+                     else
+                         if [ $(docker ps -aq -f name=$GRAFANA_CONTAINER) ]; then
+                             echo "Suppression de l'ancien conteneur Grafana..."
+                             docker rm -f $GRAFANA_CONTAINER
+                         fi
+                         echo "Démarrage de Grafana..."
+                         docker run -d --name=$GRAFANA_CONTAINER -p 3000:3000 grafana/grafana
+                     fi
+                     '''
+                 }
+             }
+         }
 
-               stage('Start Grafana') {
-                   steps {
-                       script {
-                           sh '''
-                           if [ $(docker ps -q -f name=$GRAFANA_CONTAINER) ]; then
-                               echo "Le conteneur Grafana est déjà en cours d'exécution."
-                           else
-                               echo "Démarrage de Grafana..."
-                               docker run -d --name=$GRAFANA_CONTAINER -p 3000:3000 grafana/grafana
-                           fi
-
-                           echo "Attente de Grafana (5 sec)..."
-                           sleep 5
-
-                           docker ps | grep $GRAFANA_CONTAINER || (echo "Grafana n'a pas démarré !" && exit 1)
-                           '''
-                       }
-                   }
-               }
 
         stage('Cleanup') {
             steps {
