@@ -212,7 +212,7 @@ pipeline {
                def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
 
                // Remplace BUILD_URL par l'URL correcte
-               def customBuildUrl = "http://192.168.33.10:8080/job/${jobName}/${buildNumber}/"
+               def customBuildUrl = "http://192.168.33.10:8080/job/${jobName}/${buildNumber}"
 
                def body = """<html>
                <body>
