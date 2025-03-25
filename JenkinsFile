@@ -22,7 +22,6 @@ pipeline {
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "yosrcharek/kaddem"
-        BUILD_URL = "http://192.168.33.10:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/
     }
 
     stages {
