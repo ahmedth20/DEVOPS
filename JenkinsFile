@@ -210,9 +210,7 @@ pipeline {
                def buildNumber = env.BUILD_NUMBER
                def pipelineStatus = currentBuild.result ?: 'SUCCESS'  // Valeur par défaut pour éviter NULL
                def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
-
-               // Remplace BUILD_URL par l'URL correcte
-               def customBuildUrl = "http://192.168.33.10:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+               def customBuildUrl = 'http://192.168.33.10:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}'
                def body = """<html>
                <body>
                    <div style="border: 4px solid ${bannerColor}; padding: 10px;">
