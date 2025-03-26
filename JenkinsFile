@@ -57,13 +57,14 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                script {
-                    sh 'mvn clean package'
-                }
-            }
-        }
+     stage('Build') {
+         steps {
+             script {
+                 sh 'mvn -f ./backend/pom.xml clean package'
+             }
+         }
+     }
+
         stage('Build Spring App') {
               steps {
                   script {
@@ -81,7 +82,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'mvn test'
+                    sh 'mvn -f ./backend/pom.xml test'
                 }
             }
         }
@@ -98,7 +99,7 @@ pipeline {
         stage("Deploy to Nexus") {
             steps {
                 script {
-                    pom = readMavenPom file: "pom.xml";
+                    pom = readMavenPom file: "./backend/pom.xml";
                     filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
                     echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                     artifactPath = filesByGlob[0].path;
@@ -133,7 +134,7 @@ pipeline {
         stage('Build JAR') {
             steps {
                 script {
-                    sh 'mvn clean package -DskipTests'
+                    sh 'mvn -f ./backend/pom.xml clean package -DskipTests'
                 }
             }
         }
