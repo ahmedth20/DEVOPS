@@ -1,0 +1,43 @@
+<div mat-dialog-title>
+    <h1>Université Form</h1>
+  </div>
+  <form [formGroup]="universiteForm" (ngSubmit)="onFormSubmit()">
+    <div mat-dialog-content class="content">
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Nom Université</mat-label>
+          <input matInput type="text" placeholder="Ex. Université de Tunis" formControlName="nomUniv">
+        </mat-form-field>
+      </div>
+  
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Année de Création</mat-label>
+          <input matInput type="number" placeholder="Ex. 1990" formControlName="anneeCreation">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Budget</mat-label>
+          <input matInput type="number" placeholder="Ex. 5000000" formControlName="budget">
+          <mat-hint>En dinars</mat-hint>
+        </mat-form-field>
+      </div>
+  
+      <div class="row">
+        <mat-form-field appearance="outline">
+            <mat-label>Départements</mat-label>
+            <mat-select formControlName="departements" multiple [compareWith]="compareDepartement">
+              <mat-option *ngFor="let departement of departementsList" [value]="departement">
+                {{ departement.nomDepart }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+      </div>
+    </div>
+  
+    <div mat-dialog-actions class="action">
+      <button mat-raised-button type="button" [mat-dialog-close]="false">Annuler</button>
+      <button mat-raised-button color="primary" type="submit">{{ data ? 'Mettre à jour' : 'Enregistrer' }}</button>
+    </div>
+  </form>
+  

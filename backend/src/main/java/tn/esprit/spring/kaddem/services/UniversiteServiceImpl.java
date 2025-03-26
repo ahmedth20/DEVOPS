@@ -13,10 +13,7 @@ import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 import tn.esprit.spring.kaddem.repositories.UniversiteRepository;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UniversiteServiceImpl implements IUniversiteService {
@@ -36,12 +33,39 @@ public class UniversiteServiceImpl implements IUniversiteService {
     }
 
     public Universite addUniversite(Universite u) {
-        return (universiteRepository.save(u));
+        Set<Departement> attachedDepartements = new HashSet<>();
+
+        for (Departement d : u.getDepartements()) {
+            Departement existingDept = departementRepository.findById(d.getIdDepart()).orElse(null);
+            if (existingDept != null) {
+                attachedDepartements.add(existingDept);
+            } else {
+                attachedDepartements.add(d);
+            }
+        }
+
+        u.setDepartements(attachedDepartements);
+        return universiteRepository.save(u);
     }
 
+
+    @Override
     public Universite updateUniversite(Universite u) {
-        return (universiteRepository.save(u));
+        Universite existingUniversite = universiteRepository.findById(u.getIdUniv())
+                .orElseThrow(() -> new RuntimeException("Université non trouvée !"));
+
+        existingUniversite.setNomUniv(u.getNomUniv());
+        existingUniversite.setAnneeCreation(u.getAnneeCreation());
+        existingUniversite.setBudget(u.getBudget());
+
+        if (u.getDepartements() != null) {
+
+            existingUniversite.setDepartements(u.getDepartements());
+        }
+
+        return universiteRepository.save(existingUniversite);
     }
+
 
     @Override
     public Universite retrieveUniversite(Integer idUniversite) {
@@ -52,7 +76,7 @@ public class UniversiteServiceImpl implements IUniversiteService {
 
     @Override
     public void deleteUniversite(Integer idUniversite) {
-        Universite universite = retrieveUniversite(idUniversite); // Vérifie si l'université existe
+        Universite universite = universiteRepository.findById(idUniversite).orElseThrow();
         universiteRepository.delete(universite);
 
     }
