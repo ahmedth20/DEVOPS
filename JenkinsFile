@@ -66,7 +66,8 @@ pipeline {
      }
 
         stage('Build Spring App') {
-              steps {
+              steps {git add .
+
                   script {
                      docker.build('spring-app', './backend')
                   }
