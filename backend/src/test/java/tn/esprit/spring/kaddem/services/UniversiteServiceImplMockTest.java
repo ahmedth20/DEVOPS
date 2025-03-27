@@ -95,14 +95,36 @@ public class UniversiteServiceImplMockTest {
 
     @Test
     void testUpdateUniversite() {
-        when(universiteRepository.save(universite)).thenReturn(universite);
+        // Création d'une université simulée
+        Universite existingUniversite = new Universite();
+        existingUniversite.setIdUniv(1);
+        existingUniversite.setNomUniv("Université de Test");
+        existingUniversite.setAnneeCreation(2000);
+        existingUniversite.setBudget(50000.0);
 
+        // Création d'une université à mettre à jour
+        Universite universite = new Universite();
+        universite.setIdUniv(1);
+        universite.setNomUniv("Université de Test Modifiée");
+        universite.setAnneeCreation(2001);
+        universite.setBudget(100000.0);
+
+        // Simulation du comportement de `findById` pour renvoyer l'université existante
+        when(universiteRepository.findById(universite.getIdUniv())).thenReturn(Optional.of(existingUniversite));
+        when(universiteRepository.save(existingUniversite)).thenReturn(existingUniversite);
+
+        // Appel de la méthode à tester
         Universite updatedUniversite = universiteService.updateUniversite(universite);
 
+        // Vérification des résultats
         assertNotNull(updatedUniversite);
-        assertEquals(100000.0, updatedUniversite.getBudget());
-        verify(universiteRepository, times(1)).save(universite);
+        assertEquals("Université de Test Modifiée", updatedUniversite.getNomUniv());
+        assertEquals(100000.0, updatedUniversite.getBudget(), 0.01);
+
+        // Vérification que `save` a bien été appelé une fois avec l'université modifiée
+        verify(universiteRepository, times(1)).save(existingUniversite);
     }
+
 
     @Test
     void testDeleteUniversite() {
