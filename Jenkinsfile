@@ -6,14 +6,12 @@ pipeline {
             steps {
                 script {
                     echo 'Cleaning up any existing MySQL container...'
-                    // Supprime le conteneur s'il existe déjà
                     sh '''
                         docker stop mysql-test || true
                         docker rm mysql-test || true
                     '''
                     
                     echo 'Starting MySQL container for tests...'
-                    // Démarre un nouveau conteneur MySQL
                     sh '''
                         docker run -d --name mysql-test \
                             -e MYSQL_ROOT_PASSWORD= \
@@ -21,9 +19,11 @@ pipeline {
                             -p 3306:3306 \
                             mysql:latest
                     '''
-                    // Attend que MySQL soit prêt (timeout de 30s)
+                    // Vérifie les logs du conteneur pour diagnostiquer
+                    sh 'docker logs mysql-test'
+                    // Attend que MySQL soit prêt (timeout de 60s)
                     sh '''
-                        timeout 30s bash -c "until docker exec mysql-test mysqladmin -uroot status; do sleep 2; done"
+                        timeout 60s bash -c "until docker exec mysql-test mysqladmin -uroot -h 127.0.0.1 status; do sleep 2; echo 'Waiting for MySQL...'; done"
                     '''
                 }
             }
@@ -31,14 +31,12 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Clean and compile the project
                 sh 'mvn clean compile'
             }
         }
 
         stage('Unit Tests') {
             steps {
-                // Run unit tests with MySQL running
                 sh 'mvn test'
             }
         }
@@ -46,7 +44,6 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    // Perform SonarQube analysis
                     sh 'mvn sonar:sonar'
                 }
             }
@@ -114,7 +111,6 @@ pipeline {
 
     post {
         always {
-            // Nettoyage : arrête et supprime le conteneur MySQL temporaire
             script {
                 echo 'Cleaning up MySQL test container...'
                 sh 'docker stop mysql-test || true'
