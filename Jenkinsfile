@@ -2,6 +2,26 @@ pipeline {
     agent any
     
     stages {
+        stage('Setup MySQL for Tests') {
+            steps {
+                script {
+                    echo 'Starting MySQL container for tests...'
+                    // Démarre un conteneur MySQL temporaire avec les mêmes paramètres que application.properties
+                    sh '''
+                        docker run -d --name mysql-test \
+                            -e MYSQL_ROOT_PASSWORD= \
+                            -e MYSQL_DATABASE=kaddemdb \
+                            -p 3306:3306 \
+                            mysql:latest
+                    '''
+                    // Attend que MySQL soit prêt (timeout de 30s)
+                    sh '''
+                        timeout 30s bash -c "until docker exec mysql-test mysqladmin -uroot status; do sleep 2; done"
+                    '''
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 // Clean and compile the project
@@ -11,7 +31,7 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                // Run unit tests
+                // Run unit tests with MySQL running
                 sh 'mvn test'
             }
         }
@@ -75,7 +95,7 @@ pipeline {
             }
         }
 
-stage('Deploy with Docker Compose') {
+        stage('Deploy with Docker Compose') {
             steps {
                 script {
                     echo '🚀 Deploying with Docker Compose...'
@@ -83,6 +103,5 @@ stage('Deploy with Docker Compose') {
                 }
             }
         }
-        
     }
 }
