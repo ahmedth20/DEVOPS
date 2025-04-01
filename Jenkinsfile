@@ -69,7 +69,7 @@ pipeline {
                                 -e MYSQL_DATABASE=$DB_NAME \
                                 -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                                 -p $DB_PORT:3306 \
-                                -d mysql:8
+                                -d mysql:8 --skip-grant-tables
                         fi
 
                         echo "Attente de MySQL (10 sec)..."
