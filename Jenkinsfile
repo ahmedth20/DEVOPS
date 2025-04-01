@@ -11,15 +11,16 @@ pipeline {
                         docker rm mysql-test || true
                     '''
                     
-                    echo 'Starting MySQL container for tests...'
+                    echo 'Starting MySQL container for tests (MySQL 5.7)...'
                     sh '''
                         docker run -d --name mysql-test \
                             -e MYSQL_ROOT_PASSWORD= \
                             -e MYSQL_DATABASE=kaddemdb \
+                            -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
                             -p 3306:3306 \
-                            mysql:latest
+                            mysql:5.7
                     '''
-                    // Vérifie les logs du conteneur pour diagnostiquer
+                    // Vérifie les logs pour diagnostiquer
                     sh 'docker logs mysql-test'
                     // Attend que MySQL soit prêt (timeout de 60s)
                     sh '''
