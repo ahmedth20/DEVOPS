@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DB_NAME = 'test_db'
-        DB_USER = 'root'  
-        DB_PASS = '' 
+        DB_USER = 'root'
+        DB_PASS = ''  // Ajoutez votre mot de passe MySQL ici si nécessaire
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -54,7 +54,7 @@ pipeline {
                         sh '''
                         set -e
                         echo "Démarrage de MySQL..."
-
+                        
                         # Vérifier si le conteneur MySQL existe déjà
                         if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
@@ -77,7 +77,8 @@ pipeline {
 
                         # Vérifier si le conteneur est bien en fonctionnement
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            echo "MySQL n'a pas démarré !" 
+                            echo "MySQL n'a pas démarré !"
+                            docker logs $MYSQL_CONTAINER  # Afficher les logs du conteneur MySQL pour déboguer
                             exit 1
                         fi
 
@@ -94,6 +95,7 @@ pipeline {
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
                             echo "Échec de la connexion à MySQL après 10 tentatives !"
+                            docker logs $MYSQL_CONTAINER  # Afficher les logs du conteneur MySQL
                             exit 1
                         fi
                         '''
