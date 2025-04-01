@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DB_NAME = 'test_db'
-        DB_USER = 'root'  // Utilisation de 'root' comme utilisateur sans mot de passe
-        DB_PASS = ''  // Aucun mot de passe pour MySQL
+        DB_USER = 'root'  
+        DB_PASS = '' 
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
