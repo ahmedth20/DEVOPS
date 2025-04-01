@@ -5,8 +5,15 @@ pipeline {
         stage('Setup MySQL for Tests') {
             steps {
                 script {
+                    echo 'Cleaning up any existing MySQL container...'
+                    // Supprime le conteneur s'il existe déjà
+                    sh '''
+                        docker stop mysql-test || true
+                        docker rm mysql-test || true
+                    '''
+                    
                     echo 'Starting MySQL container for tests...'
-                    // Démarre un conteneur MySQL temporaire avec les mêmes paramètres que application.properties
+                    // Démarre un nouveau conteneur MySQL
                     sh '''
                         docker run -d --name mysql-test \
                             -e MYSQL_ROOT_PASSWORD= \
@@ -101,6 +108,17 @@ pipeline {
                     echo '🚀 Deploying with Docker Compose...'
                     sh 'docker compose up -d'
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Nettoyage : arrête et supprime le conteneur MySQL temporaire
+            script {
+                echo 'Cleaning up MySQL test container...'
+                sh 'docker stop mysql-test || true'
+                sh 'docker rm mysql-test || true'
             }
         }
     }
