@@ -20,9 +20,7 @@ pipeline {
                             -p 3306:3306 \
                             mysql:5.7
                     '''
-                    // Vérifie les logs pour diagnostiquer
                     sh 'docker logs mysql-test'
-                    // Attend que MySQL soit prêt (timeout de 60s)
                     sh '''
                         timeout 60s bash -c "until docker exec mysql-test mysqladmin -uroot -h 127.0.0.1 status; do sleep 2; echo 'Waiting for MySQL...'; done"
                     '''
@@ -100,6 +98,18 @@ pipeline {
             }
         }
 
+        stage('Cleanup Before Docker Compose') {
+            steps {
+                script {
+                    echo 'Cleaning up MySQL test container before Docker Compose...'
+                    sh '''
+                        docker stop mysql-test || true
+                        docker rm mysql-test || true
+                    '''
+                }
+            }
+        }
+
         stage('Deploy with Docker Compose') {
             steps {
                 script {
@@ -113,7 +123,7 @@ pipeline {
     post {
         always {
             script {
-                echo 'Cleaning up MySQL test container...'
+                echo 'Final cleanup of MySQL test container (if still running)...'
                 sh 'docker stop mysql-test || true'
                 sh 'docker rm mysql-test || true'
             }
