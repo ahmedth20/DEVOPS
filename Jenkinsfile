@@ -6,7 +6,6 @@ pipeline {
             steps {
                 script {
                     echo 'Cleaning up any existing MySQL containers on port 3306...'
-                    // Arrête et supprime tous les conteneurs utilisant le port 3306
                     sh '''
                         docker ps -a -q --filter "expose=3306" | xargs -r docker stop || true
                         docker ps -a -q --filter "expose=3306" | xargs -r docker rm || true
@@ -19,9 +18,16 @@ pipeline {
                             -e MYSQL_DATABASE=kaddemdb \
                             -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
                             -p 3306:3306 \
+                            --restart=no \
                             mysql:5.7
                     '''
+                    // Attendre un peu pour laisser le conteneur s'initialiser
+                    sh 'sleep 5'
+                    // Vérifier l'état du conteneur
+                    sh 'docker ps -a --filter name=mysql-test'
+                    // Capturer les logs détaillés
                     sh 'docker logs mysql-test'
+                    // Attendre que MySQL soit prêt
                     sh '''
                         timeout 60s bash -c "until docker exec mysql-test mysqladmin -uroot -h 127.0.0.1 status; do sleep 2; echo 'Waiting for MySQL...'; done"
                     '''
