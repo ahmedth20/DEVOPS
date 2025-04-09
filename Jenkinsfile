@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     stages {
         stage('Setup MySQL for Tests') {
             steps {
@@ -49,17 +49,8 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        withSonarQubeEnv('SQ1') {
-                            sh 'mvn sonar:sonar'
-                        }
-                    } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape SonarQube Analysis : ${duration}s"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
