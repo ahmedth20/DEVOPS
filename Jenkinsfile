@@ -1,26 +1,99 @@
 pipeline {
     agent any
 
+    environment {
+        DB_NAME = 'kaddemdb'
+        DB_USER = 'root'
+        DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql'
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                // Clean and compile the project
-                sh 'mvn clean compile'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        git branch: 'Département', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Checkout : ${duration}s"
+                    }
+                }
             }
         }
 
-        stage('Unit Tests') {
+        stage('Test Docker') {
             steps {
-                // Run unit tests
-                sh 'mvn test'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de Docker..."
+                        whoami
+                        docker version
+                        docker ps
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Test Docker : ${duration}s"
+                    }
+                }
+            }
+        }
+
+
+
+        stage('Build') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh 'mvn clean compile'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Build : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Test with Coverage') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Exécution des tests avec couverture..."
+                        mvn test
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime)
+                        echo "Durée de l'étape Test with Coverage : ${duration}ms"
+                    }
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    // Perform SonarQube analysis
-                    sh 'mvn sonar:sonar'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape SonarQube Analysis : ${duration}s"
+                    }
                 }
             }
         }
@@ -43,7 +116,8 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+
+  stage('Docker Build') {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
@@ -74,5 +148,15 @@ pipeline {
                 }
             }
         }
+        stage('Deploy with Docker Compose') {
+                    steps {
+                        script {
+                            echo '🚀 Deploying with Docker Compose...'
+                            sh 'docker compose up -d'
+                        }
+                    }
+                }
+
+
     }
 }
