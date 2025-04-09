@@ -5,7 +5,7 @@ pipeline {
         DB_NAME = 'test_db'
         DB_USER = 'root'
         DB_PASS = 'root'
-        DB_PORT = '3306'
+        DB_PORT = '3307'
         MYSQL_CONTAINER = 'mysql-test'
     }
 
