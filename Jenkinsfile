@@ -114,14 +114,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            script {
-                echo 'Final cleanup of MySQL test container...'
-                sh 'docker stop mysql-test || true'
-                sh 'docker rm mysql-test || true'
-            }
-        }
-    }
 }
