@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = 'root'
+        DB_PASS = ''
         DB_PORT = '3307'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -67,7 +67,7 @@ pipeline {
                                 -e MYSQL_ROOT_PASSWORD='${DB_PASS}' \\
                                 -e MYSQL_DATABASE=${DB_NAME} \\
                                 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \\
-                                -p ${DB_PORT}:3307 \\
+                                -p ${DB_PORT}:3306 \\
                                 --restart=no \\
                                 mysql:5.7
                         fi
