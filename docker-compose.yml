@@ -5,8 +5,8 @@ services:
     image: mysql:latest
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: my-secret-pw
-      MYSQL_DATABASE: kaddemdb
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE: kaddemdb
     ports:
       - "3306:3306"
     volumes:
