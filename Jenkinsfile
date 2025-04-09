@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'test_db'
-        DB_USER = 'root'
-        DB_PASS = ''
-        DB_PORT = '3307'
-        MYSQL_CONTAINER = 'mysql-test'
+        DB_NAME = 'kaddemdb' 
+        DB_USER = 'root' 
+        DB_PASS = '' 
+        DB_PORT = '3307' 
+        MYSQL_CONTAINER = 'mysqldb' 
     }
 
     stages {
@@ -69,7 +69,7 @@ pipeline {
                                 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \\
                                 -p ${DB_PORT}:3306 \\
                                 --restart=no \\
-                                mysql:5.7
+                                mysql:latest // Utilisation de mysql:latest comme dans docker-compose.yml
                         fi
 
                         echo "Attente de MySQL (10 sec)..."
@@ -166,7 +166,8 @@ pipeline {
                 }
             }
         }
-                stage('Docker Build') {
+
+        stage('Docker Build') {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
@@ -197,6 +198,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy with Docker Compose') {
             steps {
                 script {
