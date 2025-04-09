@@ -6,7 +6,7 @@ pipeline {
         DB_USER = 'root'
         DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
         DB_PORT = '3306'
-        MYSQL_CONTAINER = 'mysql'
+        MYSQL_CONTAINER = 'mysql-test'
     }
 
     stages {
