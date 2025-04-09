@@ -1,43 +1,32 @@
-version: '3.8'
 services:
-  app:
-    image: ramezzorgui/kaddem app:${IMAGE_TAG}  
-    ports:
-      - "8099:8099"
+  mysqldb:
+    image: mysql:latest
+    restart: unless-stopped
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/kaddemdb?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=my-secret-pw
-    depends_on:
-      - mysql
-    networks:
-      - mynetwork
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: "512M"
-
-  mysql:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=my-secret-pw
-      - MYSQL_DATABASE=kaddemdb
+      MYSQL_ROOT_PASSWORD: "my-secret-pw"
+      MYSQL_DATABASE: "kaddemdb"
     ports:
-      - "3307:3306"  
+      - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - mynetwork
-    deploy:
-      resources:
-        limits:
-          cpus: "1.5"
-          memory: "768M"
+      - db:/var/lib/mysql
 
-networks:
-  mynetwork:
-    driver: bridge
+  kaddem-app:
+    depends_on:
+      - mysqldb
+    image: ramezzorgui/kaddem-app
+    restart: on-failure
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url": "jdbc:mysql://mysqldb:3306/kaddemdb?createDatabaseIfNotExist=true",
+        "spring.datasource.username": "root",
+        "spring.datasource.password": "",
+        "spring.jpa.properties.hibernate.dialect": "org.hibernate.dialect.MySQL5InnoDBDialect",
+        "spring.jpa.hibernate.ddl-auto": "update"
+      }'
+    stdin_open: true
+    tty: true
 
 volumes:
-  mysql-data:
+  db:
