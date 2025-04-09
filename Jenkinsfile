@@ -1,56 +1,99 @@
 pipeline {
     agent any
-    
+
+    environment {
+        DB_NAME = 'kaddemdb'
+        DB_USER = 'root'
+        DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql-test'
+    }
+
     stages {
-        stage('Setup MySQL for Tests') {
+        stage('Checkout') {
             steps {
                 script {
-                    echo 'Cleaning up any existing MySQL containers on port 3306...'
-                    sh '''
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker stop || true
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker rm || true
-                    '''
-                    
-                    echo 'Starting MySQL container for tests (MySQL 5.7)...'
-                    sh '''
-                        docker run -d --name mysql-test \
-                            -e MYSQL_ROOT_PASSWORD= \
-                            -e MYSQL_DATABASE=kaddemdb \
-                            -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-                            -p 3306:3306 \
-                            --restart=no \
-                            mysql:5.7
-                    '''
-                    // Attendre un peu pour laisser le conteneur s'initialiser
-                    sh 'sleep 5'
-                    // Vérifier l'état du conteneur
-                    sh 'docker ps -a --filter name=mysql-test'
-                    // Capturer les logs détaillés
-                    sh 'docker logs mysql-test'
-                    // Attendre que MySQL soit prêt
-                    sh '''
-                        timeout 60s bash -c "until docker exec mysql-test mysqladmin -uroot -h 127.0.0.1 status; do sleep 2; echo 'Waiting for MySQL...'; done"
-                    '''
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        git branch: 'Département', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Checkout : ${duration}s"
+                    }
                 }
             }
         }
 
-        stage('Build') {
+        stage('Test Docker') {
             steps {
-                sh 'mvn clean compile'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de Docker..."
+                        whoami
+                        docker version
+                        docker ps
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Test Docker : ${duration}s"
+                    }
+                }
             }
         }
 
-        stage('Unit Tests') {
+
+
+        stage('Build') {
             steps {
-                sh 'mvn test'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh 'mvn clean compile'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Build : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Test with Coverage') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Exécution des tests avec couverture..."
+                        mvn test
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime)
+                        echo "Durée de l'étape Test with Coverage : ${duration}ms"
+                    }
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape SonarQube Analysis : ${duration}s"
+                    }
                 }
             }
         }
@@ -73,7 +116,8 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+
+  stage('Docker Build') {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
@@ -104,24 +148,15 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy with Docker Compose') {
-            steps {
-                script {
-                    echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d'
+                    steps {
+                        script {
+                            echo '🚀 Deploying with Docker Compose...'
+                            sh 'docker compose up -d'
+                        }
+                    }
                 }
-            }
-        }
-    }
 
-    post {
-        always {
-            script {
-                echo 'Final cleanup of MySQL test container...'
-                sh 'docker stop mysql-test || true'
-                sh 'docker rm mysql-test || true'
-            }
-        }
+
     }
 }
