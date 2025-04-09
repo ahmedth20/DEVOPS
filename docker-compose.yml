@@ -1,13 +1,12 @@
 services:
-  mysqldb:
+  mysql:
     image: mysql:latest
     restart: unless-stopped
     environment:
       - MYSQL_DATABASE=kaddemdb
       - MYSQL_ALLOW_EMPTY_PASSWORD= 'yes'
-      - MYSQL_DATABASE=kaddemdb
     ports:
-      - 3306:3306
+      - 3307:3306
     volumes:
       - db:/var/lib/mysql
   Département-app:
