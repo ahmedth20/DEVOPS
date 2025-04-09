@@ -1,56 +1,173 @@
 pipeline {
     agent any
-    
+
+    environment {
+        DB_NAME = 'kaddemdb'
+        DB_USER = 'root'
+        DB_PASS = 'my-secret-pw'
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql-test'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        IMAGE_NAME = 'ramezzorgui/kaddem app'
+        IMAGE_TAG = "v${env.BUILD_NUMBER}"
+    }
+
     stages {
-        stage('Setup MySQL for Tests') {
+        stage('Checkout') {
             steps {
                 script {
-                    echo 'Cleaning up any existing MySQL containers on port 3306...'
-                    sh '''
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker stop || true
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker rm || true
-                    '''
-                    
-                    echo 'Starting MySQL container for tests (MySQL 5.7)...'
-                    sh '''
-                        docker run -d --name mysql-test \
-                            -e MYSQL_ROOT_PASSWORD= \
-                            -e MYSQL_DATABASE=kaddemdb \
-                            -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-                            -p 3306:3306 \
-                            --restart=no \
-                            mysql:5.7
-                    '''
-                    // Attendre un peu pour laisser le conteneur s'initialiser
-                    sh 'sleep 5'
-                    // Vérifier l'état du conteneur
-                    sh 'docker ps -a --filter name=mysql-test'
-                    // Capturer les logs détaillés
-                    sh 'docker logs mysql-test'
-                    // Attendre que MySQL soit prêt
-                    sh '''
-                        timeout 60s bash -c "until docker exec mysql-test mysqladmin -uroot -h 127.0.0.1 status; do sleep 2; echo 'Waiting for MySQL...'; done"
-                    '''
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        git branch: 'Département', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Checkout : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Test Docker') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de Docker..."
+                        whoami
+                        docker version
+                        docker ps
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Test Docker : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Start MySQL') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Démarrage de MySQL..."
+
+                        # Créer le réseau mynetwork s'il n'existe pas
+                        if ! docker network ls --format '{{.Name}}' | grep -q "^mynetwork$"; then
+                            echo "Création du réseau mynetwork..."
+                            docker network create mynetwork
+                        fi
+
+                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                                echo "Le conteneur MySQL est déjà en cours d'exécution."
+                            else
+                                echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
+                                docker start $MYSQL_CONTAINER
+                            fi
+                        else
+                            echo "Démarrage d'un nouveau conteneur MySQL..."
+                            docker run --name $MYSQL_CONTAINER \
+                                --network mynetwork \
+                                -e MYSQL_DATABASE=$DB_NAME \
+                                -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                                -p $DB_PORT:3306 \
+                                --memory="1g" \
+                                --cpus="2" \
+                                -d mysql:8.0
+                        fi
+
+                        echo "Attente de MySQL (90 sec)..."
+                        sleep 90
+
+                        if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            echo "MySQL n'a pas démarré !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
+                            exit 1
+                        fi
+
+                        # Vérification de la connexion à MySQL
+                        echo "Vérification de la connexion à MySQL..."
+                        for i in {1..40}; do
+                            echo "Tentative $i : Vérification de l'état du conteneur..."
+                            docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
+                            if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
+                                echo "MySQL est prêt !"
+                                break
+                            fi
+                            echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
+                            sleep 3
+                        done
+
+                        if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
+                            echo "Échec de la connexion à MySQL après 40 tentatives !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
+                            exit 1
+                        fi
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Start MySQL : ${duration}s"
+                    }
                 }
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh 'mvn clean compile'
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Build : ${duration}s"
+                    }
+                }
             }
         }
 
-        stage('Unit Tests') {
+        stage('Test with Coverage') {
             steps {
-                sh 'mvn test'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Exécution des tests avec couverture..."
+                        mvn test
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000  // Corrigé en secondes pour cohérence
+                        echo "Durée de l'étape Test with Coverage : ${duration}s"
+                    }
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape SonarQube Analysis : ${duration}s"
+                    }
                 }
             }
         }
@@ -73,55 +190,79 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+        stage('DOCKER IMAGE') {
             steps {
                 script {
-                    echo '🐳 Building Docker Image...'
-                    sh 'docker build -t ramezzorgui/kaddem-app:0.0.1 .'
-                }
-            }
-        }
-
-        stage('List Docker Images') {
-            steps {
-                script {
-                    echo '📦 Listing Docker Images...'
-                    sh 'docker images'
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                script {
-                    echo '🚀 Pushing Docker Image to DockerHub...'
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
+                    def startTime = System.currentTimeMillis()
+                    try {
                         sh '''
-                            echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push ramezzorgui/kaddem-app:0.0.1
+                        echo "Construction de l'image Docker..."
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                         '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER IMAGE : ${duration}s"
                     }
                 }
             }
         }
 
-        stage('Cleanup Before Docker Compose') {
+        stage('DOCKER HUB') {
             steps {
                 script {
-                    echo 'Cleaning up MySQL test container before Docker Compose...'
-                    sh '''
-                        docker stop mysql-test || true
-                        docker rm mysql-test || true
-                    '''
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Connexion à Docker Hub..."
+                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        echo "Pousse de l'image vers Docker Hub..."
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER HUB : ${duration}s"
+                    }
                 }
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('DOCKER-COMPOSE') {
             steps {
                 script {
-                    echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d'
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de la présence de docker-compose.yml..."
+                        ls -la
+                        if [ ! -f docker-compose.yml ]; then
+                            echo "Erreur : docker-compose.yml introuvable !"
+                            exit 1
+                        fi
+                        echo "Vérification de l'image Docker..."
+                        docker images | grep ${IMAGE_NAME}
+                        echo "Vérification et arrêt du conteneur mysql-test..."
+                        if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
+                            echo "Arrêt et suppression du conteneur mysql-test..."
+                            docker stop mysql-test || true
+                            docker rm mysql-test || true
+                        fi
+                        echo "Vérification des ports utilisés..."
+                        docker ps -a --format '{{.Names}} {{.Ports}}'
+                        echo "Exportation de IMAGE_TAG pour Docker Compose..."
+                        export IMAGE_TAG=${IMAGE_TAG}
+                        echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
+                        docker-compose up -d --build
+                        echo "Vérification des conteneurs lancés..."
+                        docker-compose ps
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER-COMPOSE : ${duration}s"
+                    }
                 }
             }
         }
@@ -130,9 +271,29 @@ pipeline {
     post {
         always {
             script {
-                echo 'Final cleanup of MySQL test container...'
-                sh 'docker stop mysql-test || true'
-                sh 'docker rm mysql-test || true'
+                if (currentBuild.result == 'SUCCESS') {
+                    sh '''
+                    echo "Nettoyage de l'environnement (pipeline réussi)..."
+                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        docker stop $MYSQL_CONTAINER || true
+                        docker rm $MYSQL_CONTAINER || true
+                    fi
+                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                        docker-compose down || true
+                    else
+                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                    fi
+                    '''
+                } else {
+                    sh '''
+                    echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
+                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                        docker-compose down || true
+                    else
+                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                    fi
+                    '''
+                }
             }
         }
     }
