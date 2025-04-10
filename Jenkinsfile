@@ -7,8 +7,8 @@ pipeline {
                 script {
                     echo 'Cleaning up any existing MySQL containers on port 3306...'
                     sh '''
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker stop || true
-                        docker ps -a -q --filter "expose=3306" | xargs -r docker rm || true
+                        docker stop mysql-test || true
+                        docker rm mysql-test || true
                     '''
                     
                     echo 'Starting MySQL container for tests (MySQL 5.7)...'
