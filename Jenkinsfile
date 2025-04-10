@@ -150,7 +150,7 @@ pipeline {
             steps {
                 script {
                     echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker-compose up -d'
+                    sh 'docker compose up -d'
                 }
             }
         }
