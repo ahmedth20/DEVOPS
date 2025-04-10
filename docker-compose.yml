@@ -17,7 +17,7 @@ services:
     image: ramezzorgui/kaddem-app:0.0.1
     restart: on-failure
     ports:
-      - "8090:8089"
+      - "8089:8089"
     environment:
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url": "jdbc:mysql://mysqldb:3306/kaddemdb?createDatabaseIfNotExist=true",
