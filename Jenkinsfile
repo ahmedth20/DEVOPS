@@ -146,11 +146,23 @@ pipeline {
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        /*stage('Deploy with Docker Compose') {
             steps {
                 script {
                     echo '🚀 Deploying with Docker Compose...'
                     sh 'docker compose up -d'
+                }
+            }
+        }*/
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    echo '🧹 Cleaning up existing containers...'
+                    sh 'docker compose down || true'
+        
+                    echo '🚀 Deploying with Docker Compose...'
+                    sh 'docker compose up -d --remove-orphans'
                 }
             }
         }
