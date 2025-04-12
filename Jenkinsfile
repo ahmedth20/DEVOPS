@@ -42,37 +42,11 @@ pipeline {
                 }
             }
         }
+        stage ('dockerCompose'){
+              steps {
 
-        stage('Docker Build') {
-            steps {
-                script {
-                    echo '🐳 Building Docker Image...'
-                    sh 'docker build -t ramezzorgui/kaddem-app:0.0.1 .'
-                }
-            }
-        }
-
-        stage('List Docker Images') {
-            steps {
-                script {
-                    echo '📦 Listing Docker Images...'
-                    sh 'docker images'
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                script {
-                    echo '🚀 Pushing Docker Image to DockerHub...'
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
-                        sh '''
-                            echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push ramezzorgui/kaddem-app:0.0.1
-                        '''
-                    }
-                }
-            }
+                  sh 'docker compose up -d'
+              }
         }
     }
 }
