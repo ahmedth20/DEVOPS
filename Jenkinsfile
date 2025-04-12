@@ -15,7 +15,7 @@ pipeline {
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = 'localhost:8081'
         NEXUS_REPOSITORY = "Maven"
-        NEXUS_CREDENTIAL_ID = "nexusCredential"
+        NEXUS_CREDENTIAL_ID = "nexus"
         ARTIFACT_VERSION = "${BUILD_NUMBER}"
     }
 
