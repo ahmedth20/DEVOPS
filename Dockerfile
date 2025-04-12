@@ -1,4 +1,9 @@
-FROM openjdk:17
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+COPY target/*.jar app.jar
+
 EXPOSE 8083
-ADD target/DEVOPS-main-0.0.1.jar DEVOPS-main-0.0.1.jar
-ENTRYPOINT ["java", "-jar", "DEVOPS-main-0.0.1.jar"]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
