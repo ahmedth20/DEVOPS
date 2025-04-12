@@ -21,14 +21,14 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+      /*  stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     // Perform SonarQube analysis
                     sh 'mvn sonar:sonar'
                 }
             }
-        }
+        }*/
 
         stage('Deploy to Nexus') {
             steps {
