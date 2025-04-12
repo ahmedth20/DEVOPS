@@ -64,17 +64,6 @@ pipeline {
                   }
               }
 
-                       stage('Push Additional Docker Images') {
-                      steps {
-                          script {
-                              docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
-                                  sh "docker tag spring-app aymenkhelifa278/spring-app:latest"
-                                  sh "docker push aymenkhelifa278/spring-app:latest"
 
-
-                              }
-                          }
-                      }
-                  }
     }
 }
