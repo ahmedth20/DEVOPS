@@ -51,7 +51,7 @@ pipeline {
                   steps {
                       script {
                           echo 'Building Docker Image'
-                          sh "docker build -t $DOCKER_IMAGE Dockerfile"
+                          sh "docker build -t $DOCKER_IMAGE Dockerfile ."
 
                           echo 'Logging into Docker Hub'
                           withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
