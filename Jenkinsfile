@@ -1,8 +1,8 @@
 pipeline {
     agent any
      tools {
-        maven "localMaven"
-        jdk "Java8"
+        maven "Maven"
+        jdk "JAVA_HOME"
     }
 
     environment {
