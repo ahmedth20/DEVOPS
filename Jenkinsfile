@@ -85,20 +85,49 @@ pipeline {
             }
         } */
 
-       stage('Deploy to Nexus') {
+stage("Deploy to Nexus") {
     steps {
         script {
+            def pom = readMavenPom file: "pom.xml"
+            echo " Packaging Type: ${pom.packaging}"
             
-            // Login to Nexus Docker registry using HTTP
-            sh '''
-            echo admin | docker login -u admin --password-stdin http://localhost:8083
-            '''
-            docker.withRegistry('http://localhost:8083', registryCredentials) {
-                sh 'docker push $registry/$IMAGE_NAME'
+            sh 'ls -l target/' 
+            
+            def filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+
+            if (filesByGlob.length == 0) {
+                error " Aucun fichier trouvé dans target/*.${pom.packaging}"
+            }
+
+            def artifactPath = filesByGlob[0].path
+            def artifactExists = fileExists artifactPath
+
+            if (artifactExists) {
+                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}"
+
+                nexusArtifactUploader(
+                    nexusVersion: NEXUS_VERSION,
+                    protocol: NEXUS_PROTOCOL,
+                    nexusUrl: NEXUS_URL,
+                    groupId: pom.groupId,
+                    version: ARTIFACT_VERSION,
+                    repository: NEXUS_REPOSITORY,
+                    credentialsId: NEXUS_CREDENTIAL_ID,
+                    artifacts: [[
+                        artifactId: pom.artifactId,
+                        classifier: '',
+                        file: artifactPath,
+                        type: pom.packaging
+                    ]]
+                )
+
+            } else {
+                error " Le fichier ${artifactPath} n'existe pas"
             }
         }
     }
 }
+
 
 
         stage('Run Application') {
