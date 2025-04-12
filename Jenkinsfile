@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         registryCredentials = "nexus"
-        registry = "localhost:8083"
+        registry = "localhost:8081"
         DB_NAME = 'Kaddemdb'
         DB_USER = 'root'
         DB_PASS = 'ahmedequipe'
