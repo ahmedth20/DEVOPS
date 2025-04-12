@@ -91,49 +91,34 @@ pipeline {
             }
         } */
 
-stage("Deploy to Nexus") {
-    steps {
-        script {
-            def pom = readMavenPom file: "pom.xml"
-            echo " Packaging Type: ${pom.packaging}"
-            
-            sh 'ls -l target/' 
-            
-            def filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+ stage('Deploy to Nexus (Artifact)') {
+            steps {
+                script {
+                    def pom = readMavenPom file: "pom.xml"
+                    def files = findFiles(glob: "target/*.${pom.packaging}")
+                    if (files.length == 0) {
+                        error "Aucun fichier ${pom.packaging} trouvé dans target/"
+                    }
+                    def artifactPath = files[0].path
 
-            if (filesByGlob.length == 0) {
-                error " Aucun fichier trouvé dans target/*.${pom.packaging}"
-            }
-
-            def artifactPath = filesByGlob[0].path
-            def artifactExists = fileExists artifactPath
-
-            if (artifactExists) {
-                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}"
-
-                nexusArtifactUploader(
-                    nexusVersion: NEXUS_VERSION,
-                    protocol: NEXUS_PROTOCOL,
-                    nexusUrl: NEXUS_URL,
-                    groupId: pom.groupId,
-                    version: ARTIFACT_VERSION,
-                    repository: NEXUS_REPOSITORY,
-                    credentialsId: NEXUS_CREDENTIAL_ID,
-                    artifacts: [[
-                        artifactId: pom.artifactId,
-                        classifier: '',
-                        file: artifactPath,
-                        type: pom.packaging
-                    ]]
-                )
-
-            } else {
-                error " Le fichier ${artifactPath} n'existe pas"
+                    nexusArtifactUploader(
+                        nexusVersion: NEXUS_VERSION,
+                        protocol: NEXUS_PROTOCOL,
+                        nexusUrl: NEXUS_URL,
+                        groupId: pom.groupId,
+                        version: ARTIFACT_VERSION,
+                        repository: NEXUS_REPOSITORY,
+                        credentialsId: NEXUS_CREDENTIAL_ID,
+                        artifacts: [[
+                            artifactId: pom.artifactId,
+                            classifier: '',
+                            file: artifactPath,
+                            type: pom.packaging
+                        ]]
+                    )
+                }
             }
         }
-    }
-}
-
 
 
         stage('Run Application') {
@@ -188,3 +173,5 @@ stage("Deploy to Nexus") {
         }
     }
 }
+
+
