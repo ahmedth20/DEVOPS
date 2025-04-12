@@ -1,5 +1,9 @@
 pipeline {
     agent any
+     tools {
+        maven "Maven"
+        jdk "JAVA_HOME"
+    }
 
     environment {
         registryCredentials = "nexus"
@@ -15,7 +19,7 @@ pipeline {
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = 'localhost:8081'
         NEXUS_REPOSITORY = "Maven"
-        NEXUS_CREDENTIAL_ID = "nexusCredential"
+        NEXUS_CREDENTIAL_ID = "nexus"
         ARTIFACT_VERSION = "${BUILD_NUMBER}"
     }
 
@@ -91,50 +95,46 @@ pipeline {
             }
         } */
 
-stage("Deploy to Nexus") {
-    steps {
-        script {
-            def pom = readMavenPom file: "pom.xml"
-            echo " Packaging Type: ${pom.packaging}"
-            
-            sh 'ls -l target/' 
-            
-            def filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+   stage("publish to nexus") {
+            steps {
+                script {
+                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    pom = readMavenPom file: "pom.xml";
+                    // Find built artifact under target folder
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    // Print some info from the artifact found
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    // Extract the path from the File found
+                    artifactPath = filesByGlob[0].path;
+                    // Assign to a boolean response verifying If the artifact name exists
+                    artifactExists = fileExists artifactPath;
 
-            if (filesByGlob.length == 0) {
-                error " Aucun fichier trouvé dans target/*.${pom.packaging}"
-            }
+                    if(artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
 
-            def artifactPath = filesByGlob[0].path
-            def artifactExists = fileExists artifactPath
+                        nexusArtifactUploader(
+                            nexusVersion: NEXUS_VERSION,
+                            protocol: NEXUS_PROTOCOL,
+                            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            version: ARTIFACT_VERSION,
+                            repository: NEXUS_REPOSITORY,
+                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                // Artifact generated such as .jar, .ear and .war files.
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging]
+                            ]
+                        );
 
-            if (artifactExists) {
-                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}"
-
-                nexusArtifactUploader(
-                    nexusVersion: NEXUS_VERSION,
-                    protocol: NEXUS_PROTOCOL,
-                    nexusUrl: NEXUS_URL,
-                    groupId: pom.groupId,
-                    version: ARTIFACT_VERSION,
-                    repository: NEXUS_REPOSITORY,
-                    credentialsId: NEXUS_CREDENTIAL_ID,
-                    artifacts: [[
-                        artifactId: pom.artifactId,
-                        classifier: '',
-                        file: artifactPath,
-                        type: pom.packaging
-                    ]]
-                )
-
-            } else {
-                error " Le fichier ${artifactPath} n'existe pas"
+                    } else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
             }
         }
-    }
-}
-
-
 
         stage('Run Application') {
             steps {
