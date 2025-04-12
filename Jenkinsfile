@@ -1,6 +1,11 @@
 pipeline {
     agent any
-
+ environment {
+        DOCKER_IMAGE = "aymenkhelifa278/kaddem"
+        CONTAINER_NAME = "kaddem_app"
+        DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
+        DOCKERHUB_REPO = "aymenkhelifa278/kaddem"
+    }
     stages {
         stage('Build') {
             steps {
@@ -42,11 +47,34 @@ pipeline {
                 }
             }
         }
-        stage ('dockerCompose'){
-              steps {
+            stage('Build & Push Docker Image') {
+                  steps {
+                      script {
+                          echo 'Building Docker Image'
+                          sh "docker build -t $DOCKER_IMAGE Dockerfile"
 
-                  sh 'docker compose up -d'
+                          echo 'Logging into Docker Hub'
+                          withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                              sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                          }
+
+                          echo 'Pushing Docker Image'
+                          sh "docker push $DOCKER_IMAGE"
+                      }
+                  }
               }
-        }
+
+                       stage('Push Additional Docker Images') {
+                      steps {
+                          script {
+                              docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
+                                  sh "docker tag spring-app aymenkhelifa278/spring-app:latest"
+                                  sh "docker push aymenkhelifa278/spring-app:latest"
+
+
+                              }
+                          }
+                      }
+                  }
     }
 }
