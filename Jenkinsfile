@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         registryCredentials = "nexus"
-        registry = "localhost:8083"
+        registry = "localhost:8081"
         DB_NAME = 'Kaddemdb'
         DB_USER = 'root'
         DB_PASS = 'ahmedequipe'
@@ -21,6 +21,13 @@ pipeline {
         NEXUS_REPOSITORY = "Maven"
         NEXUS_CREDENTIAL_ID = "nexus"
         ARTIFACT_VERSION = "${BUILD_NUMBER}"
+
+        PROMETHEUS_CONTAINER = 'prometheus'
+        GRAFANA_CONTAINER = 'grafana'
+        DOCKER_IMAGE = "ahmedth234/kaddem"
+        CONTAINER_NAME = "kaddem_app"
+        DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
+        DOCKERHUB_REPO = "ahmedth234/kaddem"
     }
 
     stages {
@@ -139,41 +146,16 @@ pipeline {
         stage('Run Application') {
             steps {
                 script {
-                    docker.withRegistry("http://$registry", registryCredentials) {
-                        sh '''
-                        docker pull $registry/$IMAGE_NAME
+                    echo 'Building Docker Image'
+                    sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
 
-                        if [ "$(docker images -q $registry/$IMAGE_NAME)" == "" ]; then
-                            echo "Erreur: L'image Docker n'a pas été téléchargée correctement"
-                            exit 1
-                        fi
-
-                        echo "Création du fichier docker-compose.yml..."
-                        cat <<EOF > docker-compose.yml
-                        version: '3.8'
-                        services:
-                          db:
-                            image: mysql:8
-                            container_name: mysql-test
-                            restart: always
-                            environment:
-                              MYSQL_DATABASE: ${DB_NAME}
-                              MYSQL_ROOT_PASSWORD: ${DB_PASS}
-                            ports:
-                              - "3306:3306"
-                          app:
-                            image: ${registry}/${IMAGE_NAME}
-                            container_name: springboot-app
-                            depends_on:
-                              - db
-                            ports:
-                              - "8080:8080"
-                        EOF
-
-                        echo "Démarrage des services avec Docker Compose..."
-                        docker-compose up -d
-                        '''
+                    echo 'Logging into Docker Hub'
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                     }
+
+                    echo 'Pushing Docker Image'
+                    sh "docker push $DOCKER_IMAGE"
                 }
             }
         }
@@ -188,5 +170,3 @@ pipeline {
         }
     }
 }
-
-
