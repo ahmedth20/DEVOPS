@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    image: ahmedth234/kaddem:latest
+    container_name: kaddem_app
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/kaddemdb?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ahmedequipe
+    depends_on:
+      - mysql-db
+    networks:
+      - spring-boot-network
+    restart: always
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ahmedequipe
+      MYSQL_DATABASE: kaddemdb
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - spring-boot-network
+    restart: always
+
+  nexus:
+    image: sonatype/nexus3
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    environment:
+      - NEXUS_SECURITY_RANDOMPASSWORD=false
+    volumes:
+      - nexus-data:/nexus-data
+    networks:
+      - spring-boot-network
+    restart: always
+networks:
+   spring-boot-network:
+     driver: bridge
+
+volumes:
+    mysql-data:
+    nexus-data:
