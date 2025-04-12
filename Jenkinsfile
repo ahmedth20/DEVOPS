@@ -11,6 +11,12 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         IMAGE_NAME = "springbootapp:1.0"
         DOCKER_REGISTRY_URL = "http://localhost:8083"  // URL en HTTPS pour Nexus
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = 'localhost:8081'
+        NEXUS_REPOSITORY = "Maven"
+        NEXUS_CREDENTIAL_ID = "nexusCredential"
+        ARTIFACT_VERSION = "${BUILD_NUMBER}"
     }
 
     stages {
