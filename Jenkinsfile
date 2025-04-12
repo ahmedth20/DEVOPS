@@ -91,10 +91,11 @@ pipeline {
             }
         } */
 
- stage('Deploy to Nexus (Artifact)') {
+  stage('Deploy to Nexus') {
             steps {
                 script {
-                    def pom = readMavenPom file: "pom.xml"
+                    // Lire le fichier pom.xml
+                    def pom = readMavenPom file: 'pom.xml'
                     def files = findFiles(glob: "target/*.${pom.packaging}")
                     if (files.length == 0) {
                         error "Aucun fichier ${pom.packaging} trouvé dans target/"
@@ -102,13 +103,13 @@ pipeline {
                     def artifactPath = files[0].path
 
                     nexusArtifactUploader(
-                        nexusVersion: NEXUS_VERSION,
-                        protocol: NEXUS_PROTOCOL,
-                        nexusUrl: NEXUS_URL,
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'localhost:8081',
                         groupId: pom.groupId,
-                        version: ARTIFACT_VERSION,
-                        repository: NEXUS_REPOSITORY,
-                        credentialsId: NEXUS_CREDENTIAL_ID,
+                        version: "${BUILD_NUMBER}",
+                        repository: 'Maven',
+                        credentialsId: 'nexus',
                         artifacts: [[
                             artifactId: pom.artifactId,
                             classifier: '',
