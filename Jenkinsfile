@@ -24,10 +24,10 @@ pipeline {
 
         PROMETHEUS_CONTAINER = 'prometheus'
         GRAFANA_CONTAINER = 'grafana'
-        DOCKER_IMAGE = "ahmedth234/kaddem"
+        DOCKER_IMAGE = "ahmedth234/ThabtiAhmed_4TWIN5_G1_kaddem"
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
-        DOCKERHUB_REPO = "ahmedth234/kaddem"
+        DOCKERHUB_REPO = "ahmedth234/ThabtiAhmed_4TWIN5_G1_kaddem"
     }
 
     stages {
