@@ -34,7 +34,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'Equipe', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    git branch: 'ThabtiAhmed_4TWIN5_G2', url: 'https://github.com/ahmedth20/DEVOPS.git'
                 }
             }
         }
