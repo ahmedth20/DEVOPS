@@ -1,7 +1,7 @@
 pipeline {
     agent any
  environment {
-        DOCKER_IMAGE = "aymenkhelifa278/kaddem"
+        DOCKER_IMAGE = "AymenKhelifa-4TWIN5-G1-kaddem"
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "aymenkhelifa278/kaddem"
@@ -21,14 +21,14 @@ pipeline {
             }
         }
 
-      /*  stage('SonarQube Analysis') {
+       stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     // Perform SonarQube analysis
                     sh 'mvn sonar:sonar'
                 }
             }
-        }*/
+        }
 
         stage('Deploy to Nexus') {
             steps {
@@ -63,7 +63,18 @@ pipeline {
                       }
                   }
               }
+             stage('build app'){
+              steps {
 
+                             sh 'docker-compose build'
+                         }
+             }
+               stage('run app'){
+                           steps {
+
+                              sh 'docker-compose up'
+                                      }
+                          }
 
     }
 }
