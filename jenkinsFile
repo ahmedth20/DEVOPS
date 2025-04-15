@@ -2,112 +2,102 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'kaddemdb'
-        DB_USER = 'root'
-        DB_PASS = 'toor'  
-        DB_PORT = '3306'
+        MYSQL_ROOT_PASSWORD = 'toor'
+        MYSQL_DATABASE = 'kaddemdb'
         MYSQL_CONTAINER = 'mysql-test'
-        NEXUS_URL = 'http://localhost:8081/repository/maven-releases/'
-        MAVEN_SETTINGS = '/usr/share/maven/conf/settings.xml'
+        MYSQL_IMAGE = 'mysql:5.7'
+        APP_IMAGE_NAME = 'abdessalemch/alpine:1.0.0'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                git branch: 'Contrat', url: 'https://github.com/ahmedth20/4TWIN5_G1_Kaddem.git'
+                echo "🔄 Récupération du code source..."
+                checkout scm
             }
         }
 
         stage('Test Docker') {
             steps {
-                sh '''
-                    echo "🔍 Vérification Docker..."
-                    whoami
-                    docker version
-                    docker ps
-                '''
+                echo "🔍 Vérification Docker..."
+                sh 'whoami'
+                sh 'docker version'
+                sh 'docker ps'
             }
         }
 
         stage('Start MySQL') {
             steps {
                 script {
-                    sh '''
-                        echo "🧹 Nettoyage de l'ancien conteneur MySQL..."
-                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                          docker rm -f $MYSQL_CONTAINER
-                        fi
+                    echo "🧹 Nettoyage de l'ancien conteneur MySQL..."
+                    sh """
+                        docker rm -f ${MYSQL_CONTAINER} || true
+                    """
 
-                        echo "🚀 Lancement d’un nouveau conteneur MySQL..."
-                        docker run -d --name $MYSQL_CONTAINER \
-                          -e MYSQL_ROOT_PASSWORD=$DB_PASS \
-                          -e MYSQL_DATABASE=$DB_NAME \
-                          -p $DB_PORT:3306 \
-                          mysql:5.7
+                    echo "🚀 Lancement d’un nouveau conteneur MySQL..."
+                    sh """
+                        docker run -d --name ${MYSQL_CONTAINER} \
+                            -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+                            -e MYSQL_DATABASE=${MYSQL_DATABASE} \
+                            -p 3306:3306 ${MYSQL_IMAGE}
+                    """
 
-                        echo "⏳ Pause initiale..."
-                        sleep 5
+                    echo "⌛ Attente de la disponibilité de MySQL..."
+                    def ready = false
+                    for (int i = 0; i < 15; i++) {
+                        def status = sh (
+                            script: "docker exec ${MYSQL_CONTAINER} mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD} --silent || true",
+                            returnStatus: true
+                        )
+                        if (status == 0) {
+                            echo "✅ MySQL est prêt."
+                            ready = true
+                            break
+                        }
+                        echo "⏳ Tentative ${i + 1}/15 : MySQL non prêt encore..."
+                        sleep(time: 5, unit: 'SECONDS')
+                    }
 
-                        echo "⌛ Attente de la disponibilité de MySQL..."
-                        for i in {1..15}; do
-                          if docker exec $MYSQL_CONTAINER mysqladmin ping -h "127.0.0.1" --user=root --password=$DB_PASS --silent; then
-                            echo "✅ MySQL est prêt !"
-                            exit 0
-                          fi
-                          echo "⏳ Tentative $i : MySQL non prêt encore..."
-                          sleep 2
-                        done
-
-                        echo "❌ MySQL n’est pas prêt après 30 secondes. Échec."
-                        exit 1
-                    '''
+                    if (!ready) {
+                        error "❌ MySQL ne s'est pas lancé correctement."
+                    }
                 }
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                echo "🔧 Compilation de l'application..."
+                sh './mvnw clean install'
             }
         }
 
-        stage('Test') {
+        stage('Docker Build & Run') {
             steps {
-                sh 'mvn test'
-            }
-        }
+                script {
+                    echo "🐳 Construction de l'image Docker..."
+                    sh "docker build -t ${APP_IMAGE_NAME} ."
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Analyse SonarQube désactivée pour le moment."
-                /*
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                    echo "🚀 Lancement du conteneur de l'application..."
+                    sh "docker run -d --name app-test -p 8085:8085 ${APP_IMAGE_NAME}"
                 }
-                */
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'mvn deploy'
-            }
-        }
-
-        stage('Docker Compose Up') {
-            steps {
-                sh 'docker compose up -d'
             }
         }
     }
 
     post {
         always {
-            echo "✅ Pipeline terminé."
+            echo "🧹 Nettoyage des conteneurs..."
+            sh 'docker rm -f mysql-test || true'
+            sh 'docker rm -f app-test || true'
         }
+
         failure {
-            echo "❌ Une erreur est survenue pendant l'exécution du pipeline."
+            echo "❌ Le pipeline a échoué."
+        }
+
+        success {
+            echo "✅ Le pipeline a réussi."
         }
     }
 }
