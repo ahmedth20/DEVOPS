@@ -17,7 +17,7 @@
 
       mysql-dbb:
         image: mysql:8.0
-        container_name: mysql-db
+        container_name: mysql-dbb
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
           MYSQL_DATABASE: kaddem_db
