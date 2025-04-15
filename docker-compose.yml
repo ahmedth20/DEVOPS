@@ -6,16 +6,16 @@
         ports:
           - "8089:8089"
         environment:
-          SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/kaddem_db?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+          SPRING_DATASOURCE_URL: jdbc:mysql://mysql-dbb:3306/kaddem_db?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD:
         depends_on:
-          - mysql-db
+          - mysql-dbb
         networks:
           - spring-boot-network
         restart: always
 
-      mysql-db:
+      mysql-dbb:
         image: mysql:8.0
         container_name: mysql-db
         environment:
