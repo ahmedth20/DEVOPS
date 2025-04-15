@@ -86,13 +86,13 @@ pipeline {
             }
         }
 
-        /*  stage('SonarQube Analysis') {
+          stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
                 }
             }
-        } */
+        } 
 
 
    stage("publish to nexus") {
