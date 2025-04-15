@@ -1,7 +1,7 @@
 pipeline {
     agent any
  environment {
-        DOCKER_IMAGE = "AymenKhelifa-4TWIN5-G1-kaddem"
+        DOCKER_IMAGE = "aymenkhelifa278/kaddem"
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "aymenkhelifa278/kaddem"
