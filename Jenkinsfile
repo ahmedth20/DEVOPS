@@ -63,6 +63,14 @@ pipeline {
                       }
                   }
               }
+
+             stage('build app'){
+
+              steps {
+
+                             sh 'docker-compose build'
+                         }
+             }
                stage('run app') {
                    steps {
                        sh 'docker-compose down -v --remove-orphans || true'
@@ -70,12 +78,6 @@ pipeline {
                    }
                }
 
-               stage('run app'){
-                           steps {
-
-                              sh 'docker-compose up -d'
-                                      }
-                          }
 
     }
 }
