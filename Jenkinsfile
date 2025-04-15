@@ -66,6 +66,10 @@ pipeline {
              stage('build app'){
               steps {
 
+                                          sh 'docker-compose down'
+                                      }
+              steps {
+
                              sh 'docker-compose build'
                          }
              }
