@@ -155,37 +155,38 @@ pipeline {
             }
         }
 
-        /*stage('Deploy with Docker Compose') {
+        stage('Notify') {
             steps {
                 script {
-                    echo '🧹 Cleaning up existing containers...'
-                    sh 'docker compose down || true'
-        
-                    echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d --remove-orphans'
-                }
-            }
-        }*/
-         /*stage('Deploy with Docker Compose') {
-            steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        echo '🧹 Stopping and removing previous containers...'
-                        // Arrêter et supprimer les anciens conteneurs sans planter si erreur
-                        sh 'docker compose down -v --remove-orphans || true'
-        
-                        echo '🚀 Deploying new containers with Docker Compose...'
-                        // Lancer les nouveaux conteneurs
-                        sh 'docker compose up -d --remove-orphans'
-                    } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Deploy with Docker Compose : ${duration}s"
-                    }
-                }
-            }
-        }*/
+                    def currentBuildResult = currentBuild.result ?: 'SUCCESS'
+                    def subject = "Build ${currentBuildResult}: ${currentBuild.fullDisplayName}"
+                    def body = "The build ${currentBuild.fullDisplayName} finished with result: ${currentBuildResult}."
 
+                    emailext (
+                        subject: subject,
+                        body: body,
+                        to: 'ramez.zorgui@esprit.tn', // replace with actual recipient email
+                        mimeType: 'text/html'
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def currentBuildResult = currentBuild.result ?: 'SUCCESS'
+                def subject = "Build ${currentBuildResult}: ${currentBuild.fullDisplayName}"
+                def body = "The build ${currentBuild.fullDisplayName} finished with result: ${currentBuildResult}."
+
+                emailext (
+                    subject: subject,
+                    body: body,
+                    to: 'ramez.zorgui@esprit.tn', // replace with actual recipient email
+                    mimeType: 'text/html'
+                )
+            }
+        }
     }
 }
