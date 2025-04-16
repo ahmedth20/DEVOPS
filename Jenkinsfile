@@ -77,7 +77,24 @@ pipeline {
                        sh 'docker-compose up -d'
                    }
                }
-
+             stage('Notification') {
+                steps {
+                      withCredentials([
+                      string(credentialsId: 'ACc326c987c855a8deff2b97cc4c9e65e5', variable: 'TWILIO_SID'),
+                      string(credentialsId: 'f8b777d709fdaf1b645cffbf7125a1c3', variable: 'TWILIO_TOKEN'),
+                      string(credentialsId: '+12523769186 ', variable: 'TWILIO_FROM'),
+                      string(credentialsId: '+21693747226', variable: 'TWILIO_TO')
+                    ]) {
+                      sh '''
+                           curl -X POST https://api.twilio.com/2010-04-01/Accounts/$TWILIO_SID/Messages.json \
+                           --data-urlencode "Body=Pipeline terminé avec succès pour Kaddem !" \
+                           --data-urlencode "From=$TWILIO_FROM" \
+                           --data-urlencode "To=$TWILIO_TO" \
+                             -u $TWILIO_SID:$TWILIO_TOKEN
+                               '''
+        }
+    }
+}
 
     }
 }
