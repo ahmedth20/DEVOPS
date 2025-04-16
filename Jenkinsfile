@@ -92,7 +92,7 @@ pipeline {
                     sh 'mvn sonar:sonar'
                 }
             }
-        } 
+        }
 
 
    stage("publish to nexus") {
@@ -149,6 +149,16 @@ pipeline {
 
                     echo 'Pushing Docker Image'
                     sh "docker push $DOCKER_IMAGE"
+                }
+            }
+        }
+
+        stage('Start Monitoring') {
+            steps {
+                script {
+                    sh '''
+                    docker compose -f docker-compose.yml up -d prometheus grafana
+                    '''
                 }
             }
         }

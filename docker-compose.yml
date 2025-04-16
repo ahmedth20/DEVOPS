@@ -42,10 +42,31 @@ services:
     networks:
       - spring-boot-network
     restart: always
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus_kaddem
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - spring-boot-network
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana_kaddem
+    ports:
+      - "3000:3000"
+    networks:
+      - spring-boot-network
+    restart: always
+
 networks:
-   spring-boot-network:
-     driver: bridge
+  spring-boot-network:
+    driver: bridge
 
 volumes:
-    mysql-data:
-    nexus-data:
+  mysql-data:
+  nexus-data:
