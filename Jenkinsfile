@@ -136,7 +136,7 @@ pipeline {
             }
         }
 
-        stage('Run Application') {
+       /* stage('Run Application') {
             steps {
                 script {
                     echo 'Building Docker Image'
@@ -151,7 +151,7 @@ pipeline {
                     sh "docker push $DOCKER_IMAGE"
                 }
             }
-        }
+        }*/
 
         stage('Start Monitoring') {
             steps {
