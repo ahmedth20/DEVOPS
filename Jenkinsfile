@@ -78,17 +78,6 @@ pipeline {
                    }
                }
 
-               stage('Notification') {
-                   steps {
-                       mail bcc: '',
-                            body: "Le pipeline Jenkins pour le projet Kaddem est terminé avec succès.",
-                            cc: '',
-                            from: 'gytgutu@gmail.com',
-                            replyTo: '',
-                            subject: "Pipeline terminé ",
-                            to: 'tonemail@domaine.com'
-                   }
-               }
 
     }
 }
