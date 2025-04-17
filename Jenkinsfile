@@ -77,6 +77,17 @@ pipeline {
                 }
             }
         }
+        
+        stage('Docker Compose Up') {
+            steps {
+                script {
+                    sh '''
+                    echo "🔧 Lancement des services via Docker Compose..."
+                    docker compose -f docker-compose.yml up -d
+                    '''
+                }
+            }
+        }
 
         stage('Test') {
             steps {
@@ -170,16 +181,6 @@ pipeline {
     }
 }
 
-
-        stage('Start Monitoring') {
-            steps {
-                script {
-                    sh '''
-                    docker compose -f docker-compose.yml up -d prometheus grafana
-                    '''
-                }
-            }
-        }
 
         stage('Cleanup') {
             steps {
