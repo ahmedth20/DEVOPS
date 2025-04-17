@@ -12,7 +12,7 @@
 #COPY nginx.conf /etc/nginx/conf.d/default.conf
 #EXPOSE 89
 
-FROM node:18.0.1-bullseye-slim
+FROM node:18-alpine
 
 WORKDIR /project
 
