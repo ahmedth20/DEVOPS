@@ -138,16 +138,16 @@ pipeline {
 }
 
 
-            stage('Build Spring App') {
-                steps {
-                    script {
-                        sh 'mvn -f ./backend/pom.xml clean package -DskipTests'
-                        sh 'ls -l ./backend/target/*.jar'
-                        docker.build('spring-app', './backend')
-                    }
+
+        stage('Build JAR') {
+            steps {
+                script {
+                    sh 'mvn -f ./backend/pom.xml clean package -DskipTests'
+                    sh 'ls -l ./backend/target/*.jar'
+                    docker.build('spring-app', './backend')
                 }
             }
-
+        }
 
         stage('Push Docker Image to Docker Hub') {
             parallel {
