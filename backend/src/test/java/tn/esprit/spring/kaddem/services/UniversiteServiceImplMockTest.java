@@ -21,6 +21,8 @@ import tn.esprit.spring.kaddem.repositories.UniversiteRepository;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -103,18 +105,17 @@ public class UniversiteServiceImplMockTest {
         existingUniversite.setBudget(50000.0);
 
         // Création d'une université à mettre à jour
-        Universite universite = new Universite();
-        universite.setIdUniv(1);
-        universite.setNomUniv("Université de Test Modifiée");
-        universite.setAnneeCreation(2001);
-        universite.setBudget(100000.0);
+ Universite updatedData = new Universite();
+updatedData.setIdUniv(1);
+updatedData.setNomUniv("Université de Test Modifiée");
+updatedData.setAnneeCreation(2001);
+updatedData.setBudget(100000.0);
 
-        // Simulation du comportement de `findById` pour renvoyer l'université existante
-        when(universiteRepository.findById(universite.getIdUniv())).thenReturn(Optional.of(existingUniversite));
-        when(universiteRepository.save(existingUniversite)).thenReturn(existingUniversite);
+when(universiteRepository.findById(updatedData.getIdUniv())).thenReturn(Optional.of(existingUniversite));
+when(universiteRepository.save(existingUniversite)).thenReturn(existingUniversite);
 
-        // Appel de la méthode à tester
-        Universite updatedUniversite = universiteService.updateUniversite(universite);
+Universite updatedUniversite = universiteService.updateUniversite(updatedData);
+
 
         // Vérification des résultats
         assertNotNull(updatedUniversite);
