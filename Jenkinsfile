@@ -7,6 +7,8 @@ pipeline {
         DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysqldb'
+        IMAGE_NAME = 'ramezzorgui/kaddem-app'
+        IMAGE_TAG = '0.0.1'
     }
 
     stages {
