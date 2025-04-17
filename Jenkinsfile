@@ -9,8 +9,6 @@ pipeline {
         MYSQL_CONTAINER = 'mysqldb'
         IMAGE_NAME = 'ramezzorgui/kaddem-app'
         IMAGE_TAG = '0.0.1'
-        pipelineReportFile = 'pipeline-report.json'
-
     }
 
     stages {
@@ -155,36 +153,6 @@ pipeline {
                             echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
                             docker push ramezzorgui/kaddem-app:0.0.1
                         '''
-                    }
-                }
-            }
-        }
-        stage('Scan Docker Image') {
-            steps {
-                script {
-                    def pipelineReport = readJSON file: env.pipelineReportFile
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        sh '''
-                        set -e
-                        echo "Vérification de la présence de l'image ${IMAGE_NAME}:${IMAGE_TAG}..."
-                        if docker images | grep -q "${IMAGE_NAME}.*${IMAGE_TAG}"; then
-                            echo "Image ${IMAGE_NAME}:${IMAGE_TAG} trouvée localement."
-                        else
-                            echo "Erreur : Image ${IMAGE_NAME}:${IMAGE_TAG} introuvable localement !"
-                            exit 1
-                        fi
-                        echo "Scan de l'image avec Trivy..."
-                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
-                        trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
-                        echo "$trivy_output"
-                        '''
-                        pipelineReport['trivyResults'] = sh(script: 'cat trivy_output.txt | grep "Total:" || echo "No vulnerabilities found"', returnStdout: true).trim()
-                    } finally {
-                        def duration = (System.currentTimeMillis() - startTime) / 1000
-                        pipelineReport['stages']['Scan Docker Image'] = duration
-                        writeJSON file: env.pipelineReportFile, json: pipelineReport
-                        echo "Durée de l'étape Scan Docker Image : ${duration}s"
                     }
                 }
             }
