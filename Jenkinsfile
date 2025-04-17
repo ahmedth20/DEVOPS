@@ -218,7 +218,7 @@ post {
             - Build: ${env.BUILD_NUMBER}
             - Durée: ${currentBuild.durationString}
             - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
-            to: "ton.email@outlook.com"
+            to: "thabtiahmed0@gmail.com"
         )
     }
 
@@ -230,7 +230,7 @@ post {
             - Build: ${env.BUILD_NUMBER}
             - Durée: ${currentBuild.durationString}
             - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
-            to: "ton.email@outlook.com"
+            to: "thabtiahmed0@gmail.com"
         )
     }
 }
