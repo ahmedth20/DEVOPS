@@ -12,14 +12,14 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: yosr
     depends_on:
-      - mysql-db
+      - mysqlBD
     networks:
       - spring-boot-network
     restart: always
 
-  mysql-db:
+  mysqlBD:
     image: mysql:8.0
-    container_name: mysql-db
+    container_name: mysqlBD
     environment:
       MYSQL_ROOT_PASSWORD: yosr
       MYSQL_DATABASE: kaddem_db
@@ -35,7 +35,7 @@ services:
     image: sonatype/nexus3
     container_name: nexus
     ports:
-      - "8081:8081"
+      - "8083:8081"
     environment:
       - NEXUS_SECURITY_RANDOMPASSWORD=false
     volumes:
@@ -44,9 +44,9 @@ services:
       - spring-boot-network
     restart: always
 
-  prometheus:
+  prometheusContainer:
     image: prom/prometheus
-    container_name: prometheus
+    container_name: prometheusContainer
     ports:
       - "9090:9090"
     volumes:

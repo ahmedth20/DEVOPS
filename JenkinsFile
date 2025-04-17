@@ -66,22 +66,7 @@ pipeline {
             }
         }
 
-      /*  stage('Build Spring App') {
-            steps {
-                script {
-                    docker.build('spring-app', './backend')
-                }
-            }
-        }
-
-        stage('Build Angular App') {
-            steps {
-                script {
-                    docker.build('angular-app', './frontend')
-                }
-            }
-        }
-*/
+     
         stage('Test') {
             steps {
                 script {
@@ -153,56 +138,18 @@ pipeline {
        
 
        
-          stage('build app'){
+          stage('Build app') {
              steps {
                    sh 'docker-compose build'
             }
          
           }
-          stage('run app') {
+          stage('Run app') {
             steps {
                   sh 'docker-compose down -v --remove-orphans || true'
                    sh 'docker-compose up -d'
                  }
          }
-
-        stage('Start Prometheus') {
-            steps {
-                script {
-                    sh '''
-                    if [ $(docker ps -q -f name=$PROMETHEUS_CONTAINER) ]; then
-                        echo "Le conteneur Prometheus est déjà en cours d'exécution."
-                    else
-                        if [ $(docker ps -aq -f name=$PROMETHEUS_CONTAINER) ]; then
-                            echo "Suppression de l'ancien conteneur Prometheus..."
-                            docker rm -f $PROMETHEUS_CONTAINER
-                        fi
-                        echo "Démarrage de Prometheus..."
-                        docker run -d --name=$PROMETHEUS_CONTAINER -p 9090:9090 prom/prometheus
-                    fi
-                    '''
-                }
-            }
-        }
-
-        stage('Start Grafana') {
-            steps {
-                script {
-                    sh '''
-                    if [ $(docker ps -q -f name=$GRAFANA_CONTAINER) ]; then
-                        echo "Le conteneur Grafana est déjà en cours d'exécution."
-                    else
-                        if [ $(docker ps -aq -f name=$GRAFANA_CONTAINER) ]; then
-                            echo "Suppression de l'ancien conteneur Grafana..."
-                            docker rm -f $GRAFANA_CONTAINER
-                        fi
-                        echo "Démarrage de Grafana..."
-                        docker run -d --name=$GRAFANA_CONTAINER -p 3000:3000 grafana/grafana
-                    fi
-                    '''
-                }
-            }
-        }
 
         stage('Cleanup') {
             steps {
@@ -210,31 +157,14 @@ pipeline {
                     sh '''
                     echo "Arrêt des conteneurs..."
                     docker stop $MYSQL_CONTAINER || true
-                    docker stop $PROMETHEUS_CONTAINER || true
-                    docker stop $GRAFANA_CONTAINER || true
+                    
                     '''
                 }
             }
         }
 
-        stage('Build App') {
-            steps {
-                script {
-                    sh 'docker-compose build'
-                }
-            }
-        }
-
-        stage('Run App') {
-            steps {
-                script {
-                    sh 'docker-compose down -v --remove-orphans || true'
-                    sh 'docker-compose up -d'
-                }
-            }
-        }
+       
     }
-
     post {
         always {
             script {
@@ -265,4 +195,6 @@ pipeline {
             }
         }
     }
+
+    
 }
