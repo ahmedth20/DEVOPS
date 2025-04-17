@@ -83,6 +83,7 @@ pipeline {
                 script {
                     sh '''
                     echo "🔧 Lancement des services via Docker Compose..."
+                    docker-compose down
                     docker compose -f docker-compose.yml up -d
                     '''
                 }
