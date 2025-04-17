@@ -47,7 +47,7 @@ pipeline {
                 }
             }
         }
-          /*  stage('Build & Push Docker Image') {
+            stage('Build & Push Docker Image') {
                   steps {
                       script {
                           echo 'Building Docker Image'
@@ -63,7 +63,7 @@ pipeline {
                       }
                   }
               }
-*/
+
              stage('build app'){
 
               steps {
