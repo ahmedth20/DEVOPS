@@ -136,22 +136,40 @@ pipeline {
             }
         }
 
-       /* stage('Run Application') {
-            steps {
-                script {
-                    echo 'Building Docker Image'
-                    sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
+      stage('Start Monitoring') {
+    steps {
+        script {
+            sh '''
+            # Démarrer Prometheus si non démarré
+            if [ "$(docker ps -q -f name=prometheus)" = "" ]; then
+                if [ "$(docker ps -aq -f name=prometheus)" = "" ]; then
+                    echo "➡️ Lancement de Prometheus..."
+                    docker run -d --name prometheus -p 9090:9090 prom/prometheus
+                else
+                    echo "⚠️ Conteneur Prometheus existe mais est arrêté. Redémarrage..."
+                    docker start prometheus
+                fi
+            else
+                echo "✅ Prometheus est déjà en cours d'exécution."
+            fi
 
-                    echo 'Logging into Docker Hub'
-                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    }
+            # Démarrer Grafana si non démarré
+            if [ "$(docker ps -q -f name=grafana)" = "" ]; then
+                if [ "$(docker ps -aq -f name=grafana)" = "" ]; then
+                    echo "➡️ Lancement de Grafana..."
+                    docker run -d --name grafana -p 3000:3000 grafana/grafana
+                else
+                    echo "⚠️ Conteneur Grafana existe mais est arrêté. Redémarrage..."
+                    docker start grafana
+                fi
+            else
+                echo "✅ Grafana est déjà en cours d'exécution."
+            fi
+            '''
+        }
+    }
+}
 
-                    echo 'Pushing Docker Image'
-                    sh "docker push $DOCKER_IMAGE"
-                }
-            }
-        }*/
 
         stage('Start Monitoring') {
             steps {
