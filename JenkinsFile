@@ -97,40 +97,45 @@ pipeline {
         }
 
 
-       stage("Deploy to Nexus") {
+ stage("Deploy to Nexus") {
     steps {
         script {
             def pom = readMavenPom file: "./backend/pom.xml"
-            def filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
-            echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+            def files = findFiles(glob: "backend/target/*.${pom.packaging}")
 
-            def artifactPath = filesByGlob[0].path
+            if (files.length == 0) {
+                error "*** Aucun fichier trouvé pour l’upload Nexus dans backend/target/*.${pom.packaging}"
+            }
+
+            def artifactPath = files[0].path
             def artifactExists = fileExists artifactPath
 
             if (artifactExists) {
-                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}"
+                echo "*** Fichier trouvé : ${files[0].name}, chemin : ${files[0].path}"
+                echo "*** Infos : groupId=${pom.groupId}, artifactId=${pom.artifactId}, packaging=${pom.packaging}, version=${pom.version}"
 
                 nexusArtifactUploader(
                     nexusVersion: NEXUS_VERSION,
                     protocol: NEXUS_PROTOCOL,
                     nexusUrl: NEXUS_URL,
                     groupId: pom.groupId,
+                    artifactId: pom.artifactId,
                     version: ARTIFACT_VERSION,
                     repository: NEXUS_REPOSITORY,
                     credentialsId: NEXUS_CREDENTIAL_ID,
                     artifacts: [[
-                        artifactId: pom.artifactId,
                         classifier: '',
                         file: artifactPath,
                         type: pom.packaging
                     ]]
                 )
             } else {
-                error "*** File: ${artifactPath}, could not be found"
+                error "*** Le fichier ${artifactPath} n'existe pas"
             }
         }
     }
 }
+
 
 
         stage('Build JAR') {
