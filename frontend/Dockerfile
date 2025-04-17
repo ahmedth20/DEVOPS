@@ -9,4 +9,4 @@ RUN npm run build --configuration=production
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 COPY --from=build-stage /app/dist/frontend /usr/share/nginx/html
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
