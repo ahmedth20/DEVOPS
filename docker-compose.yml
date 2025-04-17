@@ -2,7 +2,7 @@
     services:
       app:
         image: aymenkhelifa278/kaddem:latest
-        container_name: kaddem_app
+        container_name: kaddem_app1
         ports:
           - "8089:8089"
         environment:
