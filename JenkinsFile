@@ -18,7 +18,8 @@ pipeline {
         NEXUS_REPOSITORY = "devops"
         NEXUS_CREDENTIAL_ID = "nexusCredential"
         ARTIFACT_VERSION = "${BUILD_NUMBER}"
-        DOCKER_IMAGE = "yosrcharek/kaddem"
+        DOCKER_IMAGEBACK = "yosrcharek/back"
+        DOCKER_IMAGEFRONT = "yosrcharek/front"
         CONTAINER_NAME = "kaddem_app"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "yosrcharek/kaddem"
@@ -143,7 +144,8 @@ pipeline {
                     steps {
                         script {
                             echo 'Building Docker Image (New Method)'
-                            sh "docker build -t $DOCKER_IMAGE  ./backend"
+                            sh "docker build -t $DOCKER_IMAGEBACK  ./backend"
+                            sh "docker build -t $DOCKER_IMAGEFRONT  ./frontend"
                         }
 
                     }
@@ -155,7 +157,8 @@ pipeline {
                             echo 'Pushing Docker Image (New Method)'
                             withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                                 sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                                sh "docker push $DOCKER_IMAGE"
+                                sh "docker push $DOCKER_IMAGEBACK"
+                                sh "docker push $DOCKER_IMAGEFRONT"
                             }
                         }
                     }
@@ -163,16 +166,7 @@ pipeline {
             }
         }
 
-        stage('Push Docker Images') {
-            steps {
-                script {
-                  docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID){
-                        docker.image('spring-app').push()
-                        docker.image('angular-app').push()
-                    }
-                }
-            }
-        }
+       
           stage('build app'){
              steps {
                    sh 'docker-compose build'
