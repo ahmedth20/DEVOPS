@@ -212,13 +212,17 @@ pipeline {
 post {
     success {
         emailext (
-            subject: "✅ Succès du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-            body: """Le build s'est terminé avec succès 🎉
-            - Job: ${env.JOB_NAME}
-            - Build: ${env.BUILD_NUMBER}
-            - Durée: ${currentBuild.durationString}
-            - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
-            to: "thabtiahmed0@gmail.com"
+            subject: "✅ Build Réussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+Le build a réussi 🎉
+
+Job : ${env.JOB_NAME}
+Build : ${env.BUILD_NUMBER}
+Durée : ${currentBuild.durationString}
+Auteur : Jenkins
+""",
+            to: "thabtiahmed0@gmail.com",
+            recipientProviders: [[$class: 'DevelopersRecipientProvider']]
         )
     }
 
