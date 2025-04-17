@@ -78,7 +78,7 @@ pipeline {
             }
         }
         
-        stage('Docker Compose Up') {
+     /*   stage('Docker Compose Up') {
             steps {
                 script {
                     sh '''
@@ -88,7 +88,7 @@ pipeline {
                     '''
                 }
             }
-        }
+        } */
 
         stage('Test') {
             steps {
