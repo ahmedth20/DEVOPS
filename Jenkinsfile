@@ -52,7 +52,7 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh 'mvn clean'
-                        sh 'mvn clean compile'
+                        sh 'mvn clean install'
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
