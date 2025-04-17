@@ -138,19 +138,6 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image to Docker Hub') {
-            parallel {
-                stage('Build New Docker Image') {
-                    steps {
-                        script {
-                            echo 'Building Docker Image (New Method)'
-                            sh "docker build -t $DOCKER_IMAGEBACK  ./backend"
-                            sh "docker build -t $DOCKER_IMAGEFRONT  ./frontend"
-                        }
-
-                    }
-                }
-
                 stage('Push New Docker Image') {
                     steps {
                         script {
