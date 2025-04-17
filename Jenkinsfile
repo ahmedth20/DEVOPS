@@ -209,4 +209,31 @@ pipeline {
             }
         }
     }
+post {
+    success {
+        emailext (
+            subject: "✅ Succès du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            body: """Le build s'est terminé avec succès 🎉
+            - Job: ${env.JOB_NAME}
+            - Build: ${env.BUILD_NUMBER}
+            - Durée: ${currentBuild.durationString}
+            - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
+            to: "ton.email@outlook.com"
+        )
+    }
+
+    failure {
+        emailext (
+            subject: "❌ Échec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            body: """Le build a échoué 😞
+            - Job: ${env.JOB_NAME}
+            - Build: ${env.BUILD_NUMBER}
+            - Durée: ${currentBuild.durationString}
+            - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
+            to: "ton.email@outlook.com"
+        )
+    }
 }
+
+}
+
