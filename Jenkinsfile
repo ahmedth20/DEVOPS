@@ -100,15 +100,19 @@ pipeline {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
-                    try {
-                        sh '''
-                        echo "Déploiement vers Nexus (tests ignorés)..."
-                        mvn deploy -DskipTests
-                        '''
-                    } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Deploy to Nexus : ${duration}s"
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', 
+                                                      usernameVariable: 'NEXUS_USER', 
+                                                      passwordVariable: 'NEXUS_PASS')]) {
+                        try {
+                            sh """
+                            echo "Déploiement vers Nexus (tests ignorés)..."
+                            mvn deploy -DskipTests -Dnexus.username=${NEXUS_USER} -Dnexus.password=${NEXUS_PASS}
+                            """
+                        } finally {
+                            def endTime = System.currentTimeMillis()
+                            def duration = (endTime - startTime) / 1000
+                            echo "Durée de l'étape Deploy to Nexus : ${duration}s"
+                        }
                     }
                 }
             }
