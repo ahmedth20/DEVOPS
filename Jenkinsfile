@@ -106,7 +106,7 @@ pipeline {
                         try {
                             sh """
                             echo "Déploiement vers Nexus (tests ignorés)..."
-                            mvn deploy -DskipTests -Dnexus.username=${NEXUS_USER} -Dnexus.password=${NEXUS_PASS}
+                            mvn deploy -DskipTests
                             """
                         } finally {
                             def endTime = System.currentTimeMillis()
