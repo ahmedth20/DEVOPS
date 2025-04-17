@@ -28,7 +28,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    git branch: 'universite', url: 'https://github.com/ahmedth20/DEVOPS.git'
+                    git branch: 'CharekYosr-TWIN5-G1-Kaddem', url: 'https://github.com/ahmedth20/DEVOPS.git'
                 }
             }
         }
