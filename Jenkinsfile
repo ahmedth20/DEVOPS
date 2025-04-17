@@ -36,6 +36,7 @@ pipeline {
                         whoami
                         docker version
                         docker ps
+                        docker-compose ps  # List all containers managed by docker-compose
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
@@ -159,7 +160,8 @@ pipeline {
             steps {
                 script {
                     echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d'
+                    sh 'docker-compose down'  // Stop all services
+                    sh 'docker-compose up -d'  // Start the containers again in detached mode
                 }
             }
         }
