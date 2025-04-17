@@ -25,7 +25,7 @@ pipeline {
         PROMETHEUS_CONTAINER = 'prometheus'
         GRAFANA_CONTAINER = 'grafana'
         DOCKER_IMAGE = "ahmedth234/thabtiahmed_4twin5_g1_kaddem"
-        CONTAINER_NAME = "kaddem_app"
+        CONTAINER_NAME = "kaddemapp"
         DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'
         DOCKERHUB_REPO = "ahmedth234/ThabtiAhmed_4TWIN5_G1_kaddem"
     }
@@ -144,6 +144,23 @@ pipeline {
                     } else {
                         error "*** File: ${artifactPath}, could not be found";
                     }
+                }
+            }
+        }
+
+             stage('Run Application') {
+            steps {
+                script {
+                    echo 'Building Docker Image'
+                    sh "docker build -t $DOCKER_IMAGE -f Dockerfile ."
+
+                    echo 'Logging into Docker Hub'
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    }
+
+                    echo 'Pushing Docker Image'
+                    sh "docker push $DOCKER_IMAGE"
                 }
             }
         }
