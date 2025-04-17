@@ -147,6 +147,7 @@ pipeline {
           stage('Run app') {
             steps {
                   sh 'docker-compose down -v --remove-orphans || true'
+                   sh 'export COMPOSE_HTTP_TIMEOUT=120'
                    sh 'docker-compose up -d'
                  }
          }
