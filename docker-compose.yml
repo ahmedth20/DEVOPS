@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   app:
-    image: yosrcharek/kaddem:latest
-    container_name: kaddem_app
+    image: yosrcharek/back
+    container_name: backend
+    build: ./backend
     ports:
       - "8089:8089"
     environment:
@@ -55,15 +56,15 @@ services:
     restart: always
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
     container_name: frontend_app
+    build: ./frontend
+    image: yosrcharek/front
     ports:
-      - "4200:80" # ou tout autre port que tu préfères pour Angular
+      - "4200:4200"
     networks:
       - spring-boot-network
     restart: always
+
 
 networks:
   spring-boot-network:
