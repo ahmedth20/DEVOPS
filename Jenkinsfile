@@ -9,6 +9,8 @@ pipeline {
         MYSQL_CONTAINER = 'mysqldb'
         IMAGE_NAME = 'ramezzorgui/kaddem-app'
         IMAGE_TAG = '0.0.1'
+        pipelineReportFile = 'pipeline-report.json'
+
     }
 
     stages {
