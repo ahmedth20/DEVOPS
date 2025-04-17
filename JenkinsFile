@@ -60,7 +60,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn -f ./backend/pom.xml clean package'
+                    sh 'mvn -f ./backend/pom.xml clean install'
                 }
             }
         }

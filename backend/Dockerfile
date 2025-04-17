@@ -1,13 +1,12 @@
 
 FROM openjdk:17-jdk-slim
 
-LABEL authors="yosry"
 
 ENTRYPOINT ["top", "-b"]
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+ADD target/*.jar app.jar
 
 EXPOSE 8080
 
