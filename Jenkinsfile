@@ -51,6 +51,7 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
+                        sh 'mvn clean'
                         sh 'mvn clean compile'
                     } finally {
                         def endTime = System.currentTimeMillis()
