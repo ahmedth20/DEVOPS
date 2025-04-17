@@ -143,8 +143,9 @@ pipeline {
                     steps {
                         script {
                             echo 'Building Docker Image (New Method)'
-                            sh "docker build -t $DOCKER_IMAGE -f ./backend/Dockerfile ."
+                            sh "docker build -t $DOCKER_IMAGE  ./backend"
                         }
+
                     }
                 }
 
