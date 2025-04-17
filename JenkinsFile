@@ -166,13 +166,25 @@ pipeline {
         stage('Push Docker Images') {
             steps {
                 script {
-                    docker.withRegistry('https://hub.docker.com/', 'docker-credentials-id') {
+                  docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID){
                         docker.image('spring-app').push()
                         docker.image('angular-app').push()
                     }
                 }
             }
         }
+          stage('build app'){
+             steps {
+                   sh 'docker-compose build'
+            }
+         
+          }
+          stage('run app') {
+            steps {
+                  sh 'docker-compose down -v --remove-orphans || true'
+                   sh 'docker-compose up -d'
+                 }
+         }
 
         stage('Start Prometheus') {
             steps {
