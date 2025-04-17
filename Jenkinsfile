@@ -84,8 +84,12 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
-                        withSonarQubeEnv('SonarQube') {
-                            sh 'mvn sonar:sonar'
+                        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                            withSonarQubeEnv('SonarQube') {
+                                sh """
+                                mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}
+                                """
+                            }
                         }
                     } finally {
                         def endTime = System.currentTimeMillis()
