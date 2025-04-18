@@ -95,6 +95,24 @@ pipeline {
         }
     }
 }
+              stage('Email Notification') {
+                  steps {
+                      emailext (
+                          subject: "Pipeline Kaddem - Succès ✅",
+                          body: """<p>Bonjour,</p>
+              <p>La pipeline <b>Kaddem</b> s'est terminée avec succès !</p>
+              <p><b>Détails :</b></p>
+              <ul>
+                <li>Date : ${new Date()}</li>
+                <li>Projet : Kaddem</li>
+                <li>Status : Succès ✅</li>
+              </ul>
+              <p>Bien cordialement,<br>Jenkins CI/CD</p>""",
+                          to: "aymenkhelifa01@gmail.com",
+                          mimeType: 'text/html'
+                      )
+                  }
+              }
 
     }
 }
