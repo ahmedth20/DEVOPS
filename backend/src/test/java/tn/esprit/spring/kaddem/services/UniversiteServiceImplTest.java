@@ -40,7 +40,7 @@ public class UniversiteServiceImplTest {
     private Universite savedUniversite;
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         universiteRepository.deleteAll();
         universiteRepository.flush();
 
@@ -68,7 +68,7 @@ public class UniversiteServiceImplTest {
     }
 
     @Test
-    public void testAddUniversite() {
+     void testAddUniversite() {
         Universite universite = new Universite();
         universite.setNomUniv("New Univ");
         universite.setAnneeCreation(2020);
@@ -82,13 +82,13 @@ public class UniversiteServiceImplTest {
     }
 
     @Test
-    public void testRetrieveUniversite() {
+    void testRetrieveUniversite() {
         Optional<Universite> found = universiteRepository.findById(savedUniversite.getIdUniv());
         assertTrue(found.isPresent(), "L'université n'a pas été trouvée !");
     }
 
     @Test
-    public void testUpdateUniversite() {
+    void testUpdateUniversite() {
         savedUniversite.setNomUniv("ESPRIT UPDATED");
         Universite updated = universiteRepository.save(savedUniversite);
         universiteRepository.flush();
@@ -97,7 +97,7 @@ public class UniversiteServiceImplTest {
     }
 
     @Test
-    public void testDeleteUniversite() {
+     void testDeleteUniversite() {
         universiteRepository.deleteById(savedUniversite.getIdUniv());
         universiteRepository.flush();
 
@@ -106,14 +106,14 @@ public class UniversiteServiceImplTest {
     }
 
     @Test
-    public void testGetUniversitesByAnneeCreation() {
+     void testGetUniversitesByAnneeCreation() {
         List<Universite> universites = universiteRepository.findUniversitesByAnneeCreation(2003);
         assertFalse(universites.isEmpty(), "La liste des universités ne devrait pas être vide !");
 
     }
 
     @Test
-    public void testGetUniversitesByBudget() {
+    void testGetUniversitesByBudget() {
         List<Universite> universites = universiteRepository.findUniversitesByBudget(100000.0);
         assertEquals(1, universites.size());
         assertFalse(universites.isEmpty(), "Aucune université trouvée avec ce budget !");
