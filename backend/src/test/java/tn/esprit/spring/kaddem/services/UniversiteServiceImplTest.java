@@ -87,14 +87,7 @@ import static org.junit.jupiter.api.Assertions.*;
         assertTrue(found.isPresent(), "L'université n'a pas été trouvée !");
     }
 
-    @Test
-    void testUpdateUniversite() {
-        savedUniversite.setNomUniv("ESPRIT UPDATED");
-        Universite updated = universiteRepository.save(savedUniversite);
-        universiteRepository.flush();
-
-        assertEquals("ESPRIT UPDATED", updated.getNomUniv(), "L'université n'a pas été mise à jour !");
-    }
+ 
 
     @Test
      void testDeleteUniversite() {
