@@ -222,6 +222,7 @@ Durée : ${currentBuild.durationString}
 Auteur : Jenkins
 """,
             to: "thabtiahmed0@gmail.com",
+             mimeType: 'text/html; charset=UTF-8',  // Ajoutez cette ligne
             recipientProviders: [[$class: 'DevelopersRecipientProvider']]
         )
     }
