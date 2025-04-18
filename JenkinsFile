@@ -77,16 +77,16 @@ pipeline {
         stage('Sonarqube') {
             steps {
                 echo 'sonar test';
-               sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=06December%2001'
+               sh 'mvn -f ./backend sonar:sonar -Dsonar.login=admin -Dsonar.password=06December%2001'
             }
        }
-        stage('SonarQube Analysis') {
+    /*    stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn  -f ./backend sonar:sonar -X'
                 }
             }
-        }
+        }*/
 
       stage("Deploy to Nexus") {
             steps {
