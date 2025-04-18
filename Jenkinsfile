@@ -97,22 +97,26 @@ pipeline {
 }
               stage('Email Notification') {
                   steps {
-                      emailext (
-                          subject: "Pipeline Kaddem - Succès ✅",
-                          body: """<p>Bonjour,</p>
-              <p>La pipeline <b>Kaddem</b> s'est terminée avec succès !</p>
-              <p><b>Détails :</b></p>
-              <ul>
-                <li>Date : ${new Date()}</li>
-                <li>Projet : Kaddem</li>
-                <li>Status : Succès ✅</li>
-              </ul>
-              <p>Bien cordialement,<br>Jenkins CI/CD</p>""",
-                          to: "aymenkhelifa01@gmail.com",
-                          mimeType: 'text/html'
-                      )
+                      script {
+                          emailext (
+                              subject: currentBuild.currentResult == 'SUCCESS' ? "✅ Pipeline Kaddem Réussie" : "❌ Pipeline Kaddem Échouée",
+                              body: """
+                                  <p>Bonjour,</p>
+                                  <p>La pipeline <b>Kaddem</b> est terminée avec le statut :</p>
+                                  <ul>
+
+                                      <li>Projet : Kaddem</li>
+                                   >
+                                  </ul>
+                                  <p>Cordialement,<br>Jenkins CI/CD</p>
+                              """,
+                              to: "aymenkhelifa01@gmail.com",
+                              mimeType: 'text/html'
+                          )
+                      }
                   }
               }
+
 
     }
 }
