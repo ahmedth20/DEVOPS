@@ -212,7 +212,7 @@ pipeline {
 post {
     success {
         emailext (
-            subject: "Build Réussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            subject: "Build Reussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """
 Le build a reussi<br>
 <br>
@@ -229,7 +229,7 @@ Auteur : ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).tr
 
     failure {
         emailext (
-            subject: "Échec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            subject: "Echec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
             body: """Le build a echoue<br>
 - Job: ${env.JOB_NAME}<br>
 - Build: ${env.BUILD_NUMBER}<br>
