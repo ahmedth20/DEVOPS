@@ -74,11 +74,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Sonarqube') {
-            steps {
-              sh'  docker start sonarqube '
-            }
-       }
+     
        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
