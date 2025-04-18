@@ -7,11 +7,7 @@ scrape_configs:
     static_configs:
       - targets: ['192.168.33.10:8080'] # Remplace par l'IP de Jenkins
 
-  - job_name: 'ubuntu-node'
-    static_configs:
-      - targets: ['192.168.33.10:9100'] # Exporter Node pour Ubuntu
-
   - job_name: 'spring-boot-app'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['192.168.33.10:8089'] # Port de ton app Spring Boot
+      - targets: ['192.168.33.10:8090'] # Port de ton app Spring Boot
