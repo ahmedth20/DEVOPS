@@ -95,27 +95,7 @@ pipeline {
         }
     }
 }
-              stage('Email Notification') {
-                  steps {
-                      script {
-                          emailext (
-                              subject: currentBuild.currentResult == 'SUCCESS' ? "✅ Pipeline Kaddem Réussie" : "❌ Pipeline Kaddem Échouée",
-                              body: """
-                                  <p>Bonjour,</p>
-                                  <p>La pipeline <b>Kaddem</b> est terminée avec le statut :</p>
-                                  <ul>
 
-                                      <li>Projet : Kaddem</li>
-                                   >
-                                  </ul>
-                                  <p>Cordialement,<br>Jenkins CI/CD</p>
-                              """,
-                              to: "gytgutu@gmail.com",
-                              mimeType: 'text/html'
-                          )
-                      }
-                  }
-              }
 
 
     }
