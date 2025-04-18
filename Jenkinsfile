@@ -212,29 +212,32 @@ pipeline {
 post {
     success {
         emailext (
-            subject: " Build Reussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            subject: "Build Réussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """
-Le build a reussi 
-
-Job : ${env.JOB_NAME}
-Build : ${env.BUILD_NUMBER}
-Durée : ${currentBuild.durationString}
-Auteur : ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
+Le build a reussi<br>
+<br>
+Job : ${env.JOB_NAME}<br>
+Build : ${env.BUILD_NUMBER}<br>
+Duree : ${currentBuild.durationString}<br>
+Auteur : ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}<br>
+""",
             to: "thabtiahmed0@gmail.com",
-             mimeType: 'text/html; charset=UTF-8',  // Ajoutez cette ligne
+            mimeType: 'text/html; charset=UTF-8',  // Assurez-vous que cela est inclus
             recipientProviders: [[$class: 'DevelopersRecipientProvider']]
         )
     }
 
     failure {
         emailext (
-            subject: "Echec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-            body: """Le build a echoue 
-            - Job: ${env.JOB_NAME}
-            - Build: ${env.BUILD_NUMBER}
-            - Duree: ${currentBuild.durationString}
-            - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
-            to: "thabtiahmed0@gmail.com"
+            subject: "Échec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            body: """Le build a echoue<br>
+- Job: ${env.JOB_NAME}<br>
+- Build: ${env.BUILD_NUMBER}<br>
+- Duree: ${currentBuild.durationString}<br>
+- Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}<br>
+""",
+            to: "thabtiahmed0@gmail.com",
+            mimeType: 'text/html; charset=UTF-8'  // Ajoutez ceci également
         )
     }
 }
