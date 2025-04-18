@@ -212,15 +212,14 @@ pipeline {
 post {
     success {
         emailext (
-            subject: "✅ Build Réussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            subject: " Build Reussi - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """
-Le build a réussi 🎉
+Le build a reussi 
 
 Job : ${env.JOB_NAME}
 Build : ${env.BUILD_NUMBER}
 Durée : ${currentBuild.durationString}
-Auteur : Jenkins
-""",
+Auteur : ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
             to: "thabtiahmed0@gmail.com",
              mimeType: 'text/html; charset=UTF-8',  // Ajoutez cette ligne
             recipientProviders: [[$class: 'DevelopersRecipientProvider']]
@@ -229,11 +228,11 @@ Auteur : Jenkins
 
     failure {
         emailext (
-            subject: "❌ Échec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-            body: """Le build a échoué 😞
+            subject: "Echec du build - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            body: """Le build a echoue 
             - Job: ${env.JOB_NAME}
             - Build: ${env.BUILD_NUMBER}
-            - Durée: ${currentBuild.durationString}
+            - Duree: ${currentBuild.durationString}
             - Auteur: ${sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()}""",
             to: "thabtiahmed0@gmail.com"
         )
