@@ -7,7 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class KaddemApplicationTests {
 
   @Test
-    void contextLoads(){
+  void contextLoads() {
+      throw new UnsupportedOperationException("Pas encore implémenté");
+  }
 
-    }
 }
