@@ -110,7 +110,7 @@ pipeline {
                                   </ul>
                                   <p>Cordialement,<br>Jenkins CI/CD</p>
                               """,
-                              to: "aymenkhelifa01@gmail.com",
+                              to: "gytgutu@gmail.com",
                               mimeType: 'text/html'
                           )
                       }
