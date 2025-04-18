@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class UniversiteServiceImplTest {
+ class UniversiteServiceImplTest {
 
     @Autowired
     UniversiteRepository universiteRepository;
