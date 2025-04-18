@@ -53,7 +53,17 @@ services:
     networks:
       - spring-boot-network
     restart: always
-
+    
+ prometheusContainer:
+    image: prom/prometheus
+    container_name: prometheusContainer
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - spring-boot-network
+    restart: always
 
 networks:
   spring-boot-network:
