@@ -25,12 +25,12 @@ import java.util.Optional;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
-/*@ExtendWith(SpringExtension.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional*/
+@Transactional
 public class UniversiteServiceImplTest {
-/*
+
     @Autowired
     UniversiteRepository universiteRepository;
     @Autowired
@@ -158,6 +158,6 @@ public class UniversiteServiceImplTest {
         assertNotNull(universites);
         assertFalse(universites.isEmpty());
     }
-*/
+
 
 }
