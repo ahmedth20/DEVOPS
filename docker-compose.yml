@@ -1,4 +1,4 @@
-#version: '3.8'
+version: '3.8'
 
 services:
   app:
@@ -53,8 +53,8 @@ services:
     networks:
       - spring-boot-network
     restart: always
-    
- prometheusContainer:
+
+  prometheusContainer:
     image: prom/prometheus
     container_name: prometheusContainer
     ports:
