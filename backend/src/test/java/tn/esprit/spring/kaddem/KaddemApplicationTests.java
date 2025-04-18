@@ -8,7 +8,7 @@ public class KaddemApplicationTests {
 
   @Test
   void contextLoads() {
-      throw new UnsupportedOperationException("Pas encore implémenté");
+      System.out.println("Contexte Spring Boot chargé avec succès.");
   }
 
 }
