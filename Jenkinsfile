@@ -148,7 +148,7 @@ pipeline {
             }
         }
 
-        /*     stage('Run Application') {
+             stage('Run Application') {
             steps {
                 script {
                     echo 'Building Docker Image'
@@ -163,36 +163,36 @@ pipeline {
                     sh "docker push $DOCKER_IMAGE"
                 }
             }
-        }*/
+        }
 
-      stage('Prometheus and Grafana') {
+   stage('Prometheus and Grafana') {
     steps {
         script {
             sh '''
             # Démarrer Prometheus si non démarré
             if [ "$(docker ps -q -f name=prometheus)" = "" ]; then
                 if [ "$(docker ps -aq -f name=prometheus)" = "" ]; then
-                    echo " Lancement de Prometheus..."
+                    echo "Lancement de Prometheus..."
                     docker run -d --name prometheus -p 9090:9090 prom/prometheus
                 else
-                    echo " Conteneur Prometheus existe mais est arrêté. Redémarrage..."
+                    echo "Conteneur Prometheus existe mais est arrêté. Redémarrage..."
                     docker start prometheus
                 fi
             else
-                echo " Prometheus est déjà en cours d'exécution."
+                echo "Prometheus est déjà en cours d'exécution."
             fi
 
             # Démarrer Grafana si non démarré
             if [ "$(docker ps -q -f name=grafana)" = "" ]; then
                 if [ "$(docker ps -aq -f name=grafana)" = "" ]; then
-                    echo " Lancement de Grafana..."
+                    echo "Lancement de Grafana..."
                     docker run -d --name grafana -p 3000:3000 grafana/grafana
                 else
-                    echo " Conteneur Grafana existe mais est arrêté. Redémarrage..."
+                    echo "Conteneur Grafana existe mais est arrêté. Redémarrage..."
                     docker start grafana
                 fi
             else
-                echo " Grafana est déjà en cours d'exécution."
+                echo "Grafana est déjà en cours d'exécution."
             fi
             '''
         }
